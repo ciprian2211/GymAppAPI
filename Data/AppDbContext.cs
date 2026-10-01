@@ -1,9 +1,11 @@
 using AppGymAPI.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace AppGymAPI.Data;
 
-public class AppDbContext : DbContext
+public class AppDbContext : IdentityDbContext<User,IdentityRole<Guid>,Guid>
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
@@ -26,6 +28,8 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<User>().ToTable("Users");
         
         modelBuilder.Entity<EventParticipant>()
             .HasKey(ep => new { ep.EventId, ep.UserId });
