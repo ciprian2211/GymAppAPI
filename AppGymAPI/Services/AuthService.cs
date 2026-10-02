@@ -81,7 +81,8 @@ public class AuthService : IAuthService
         var principal = GetPrincipalFromExpiredToken(dto.Token);
         if (principal == null) return null;
 
-        var email = principal.FindFirst(JwtRegisteredClaimNames.Email)?.Value;
+        var email = principal.FindFirst(ClaimTypes.Email)?.Value 
+                    ?? principal.FindFirst(JwtRegisteredClaimNames.Email)?.Value;
         if (email == null) return null;
 
         var user = await _userManager.FindByEmailAsync(email);
