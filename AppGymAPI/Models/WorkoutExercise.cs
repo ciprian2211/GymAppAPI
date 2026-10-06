@@ -13,4 +13,5 @@ public class WorkoutExercise
     public Exercise? Exercise { get; set; }
 
     public List<ExerciseSet> Sets { get; set; } = new();
+    
 }

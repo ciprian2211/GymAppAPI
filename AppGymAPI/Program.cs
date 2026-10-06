@@ -39,7 +39,11 @@ builder.Services.AddAuthentication(options =>
         };
     });
 builder.Services.AddAuthorization();
+builder.Services.Configure<AppGymAPI.Settings.CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
+
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IPhotoService, PhotoService>();
 
 builder.Services.AddOpenApi();
 
@@ -52,5 +56,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 AuthEndpoints.Map(app);
+UserEndpoints.Map(app);
 app.Run();
 

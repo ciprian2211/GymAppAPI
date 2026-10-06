@@ -1,8 +1,9 @@
-﻿using AppGymAPI.DTOs;
+using AppGymAPI.DTOs;
 using AppGymAPI.Models;
 using AppGymAPI.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace AppGymAPI.Tests;
@@ -11,6 +12,7 @@ public class AuthServiceTests
 {
     private readonly Mock<UserManager<User>> _userManagerMock;
     private readonly Mock<IConfiguration> _configurationMock;
+    private readonly Mock<ILogger<AuthService>> _loggerMock;
     private readonly AuthService _authService;
     public AuthServiceTests()
     {
@@ -20,6 +22,7 @@ public class AuthServiceTests
             null!,null!,null!,null!,null!,null!,null!,null!);
         
         _configurationMock = new Mock<IConfiguration>();
+        _loggerMock = new Mock<ILogger<AuthService>>();
         
         _configurationMock
             .Setup(c => c["JwtSettings:SecretKey"])
@@ -31,7 +34,7 @@ public class AuthServiceTests
         _configurationMock
             .Setup(c => c["JwtSettings:Audience"]).Returns("TestAudience");
         
-        _authService = new AuthService(_userManagerMock.Object, _configurationMock.Object);
+        _authService = new AuthService(_userManagerMock.Object, _configurationMock.Object, _loggerMock.Object);
     }
 
     [Fact]
