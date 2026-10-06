@@ -2,6 +2,7 @@ using AppGymAPI.Data;
 using AppGymAPI.DTOs;
 using AppGymAPI.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace AppGymAPI.Services;
 
@@ -9,11 +10,13 @@ public class UserService : IUserService
 {
     private readonly AppDbContext _appDbContext;
     private readonly IPhotoService _photoService;
+    private readonly ILogger<UserService> _logger;
 
-    public UserService(AppDbContext appDbContext, IPhotoService photoService)
+    public UserService(AppDbContext appDbContext, IPhotoService photoService, ILogger<UserService> logger)
     {
         _appDbContext = appDbContext;
         _photoService = photoService;
+        _logger = logger;
     }
 
     public async Task<UserDTO?> SearchUserByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -34,7 +37,7 @@ public class UserService : IUserService
         };
     }
 
-    public async Task<List<UserListDTO>> SearchUserByNameAsync(string name, CancellationToken cancellationToken = default)
+    public async Task<List<UserListDTO>> SearchUsersByNameAsync(string name, CancellationToken cancellationToken = default)
     {
         return await _appDbContext.Users
             .AsNoTracking()
@@ -64,39 +67,37 @@ public class UserService : IUserService
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<UserEditDTO?> EditUserAsync(UserEditDTO dto, CancellationToken cancellationToken = default)
+    public async Task<UserEditDTO?> EditUserAsync(Guid id,UserEditDTO dto, CancellationToken cancellationToken = default)
     {
         var user = await _appDbContext.Users
-            .FirstOrDefaultAsync(u => u.Id == dto.Id, cancellationToken);
+            .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
         
         if (user is null) return null;
-
-        // NOTE: Handled race condition: if you use raw RowVersion or Concurrency Tokens, 
-        // a DbUpdateConcurrencyException might be thrown here if another request updated the user simultaneously.
+        
         user.Name = dto.Name;
         user.Surname = dto.Surname;
         user.Description = dto.Description;
         
         if (dto.ProfileImage != null && dto.ProfileImage.Length > 0)
         {
-            // 1. Delete the old photo if it exists
+         
             if (!string.IsNullOrEmpty(user.ImageUrl))
             {
                 try 
                 {
-                    // Extract PublicId from the Cloudinary URL (assuming folder 'appgymapi')
+                   
                     var uri = new Uri(user.ImageUrl);
                     var fileName = System.IO.Path.GetFileNameWithoutExtension(uri.LocalPath);
                     var publicId = $"appgymapi/{fileName}";
                     await _photoService.DeletePhotoAsync(publicId);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    // Log error if deletion fails, but don't stop the upload process
+                    _logger.LogWarning(ex, "Failed to delete old image {ImageUrl} for user {UserId}", user.ImageUrl, id);
                 }
             }
 
-            // 2. Upload the new photo
+       
             var imageUrl = await _photoService.AddPhotoAsync(dto.ProfileImage);
             if (!string.IsNullOrEmpty(imageUrl))
             {
@@ -108,9 +109,9 @@ public class UserService : IUserService
         {
             await _appDbContext.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateConcurrencyException)
+        catch (DbUpdateConcurrencyException ex)
         {
-            // Handle concurrency (e.g. log, throw custom error, or retry)
+            _logger.LogError(ex, "Concurrency error while updating user {UserId}", id);
             throw;
         }
         
@@ -130,9 +131,9 @@ public class UserService : IUserService
         {
             await _appDbContext.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateConcurrencyException)
+        catch (DbUpdateConcurrencyException ex)
         {
-            // Handle concurrency exception: The user might have been deleted by another thread simultaneously.
+            _logger.LogError(ex, "Concurrency error while deleting user {UserId}", id);
             return false; 
         }
         
