@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace AppGymAPI.Tests;
@@ -17,6 +18,7 @@ public class UserServiceTests : IDisposable
     private readonly SqliteConnection _connection;
     private readonly AppDbContext _dbContext;
     private readonly Mock<IPhotoService> _photoServiceMock;
+    private readonly Mock<ILogger<UserService>> _loggerMock;
     private readonly ConcurrencyExceptionInterceptor _concurrencyInterceptor;
     private readonly UserService _userService;
 
@@ -36,7 +38,8 @@ public class UserServiceTests : IDisposable
         _dbContext.Database.EnsureCreated();
 
         _photoServiceMock = new Mock<IPhotoService>();
-        _userService = new UserService(_dbContext, _photoServiceMock.Object);
+        _loggerMock = new Mock<ILogger<UserService>>();
+        _userService = new UserService(_dbContext, _photoServiceMock.Object, _loggerMock.Object);
     }
 
     public void Dispose()
@@ -146,7 +149,7 @@ public class UserServiceTests : IDisposable
         _dbContext.ChangeTracker.Clear();
 
         // Act
-        var results = await _userService.SearchUserByNameAsync("John", CancellationToken.None);
+        var results = await _userService.SearchUsersByNameAsync("John", CancellationToken.None);
 
         // Assert
         results.Should().NotBeNull();
@@ -183,7 +186,7 @@ public class UserServiceTests : IDisposable
         _dbContext.ChangeTracker.Clear();
 
         // Act
-        var results = await _userService.SearchUserByNameAsync("Zack", CancellationToken.None);
+        var results = await _userService.SearchUsersByNameAsync("Zack", CancellationToken.None);
 
         // Assert
         results.Should().NotBeNull();
@@ -253,9 +256,10 @@ public class UserServiceTests : IDisposable
     public async Task Test_EditUser_WhenUserDoesNotExist_ReturnsNull()
     {
         // Arrange: Empty DB
+        var nonExistentId = Guid.NewGuid();
         var editDto = new UserEditDTO
         {
-            Id = Guid.NewGuid(),
+            Id = nonExistentId,
             Name = "NonExistent",
             Surname = "User",
             Description = "Does not exist",
@@ -263,7 +267,7 @@ public class UserServiceTests : IDisposable
         };
 
         // Act
-        var result = await _userService.EditUserAsync(editDto, CancellationToken.None);
+        var result = await _userService.EditUserAsync(nonExistentId, editDto, CancellationToken.None);
 
         // Assert
         result.Should().BeNull();
@@ -293,7 +297,7 @@ public class UserServiceTests : IDisposable
         };
 
         // Act
-        var result = await _userService.EditUserAsync(editDto, CancellationToken.None);
+        var result = await _userService.EditUserAsync(user.Id, editDto, CancellationToken.None);
 
         // Assert
         result.Should().NotBeNull();
@@ -338,7 +342,7 @@ public class UserServiceTests : IDisposable
             .ReturnsAsync(newImageUrl);
 
         // Act
-        var result = await _userService.EditUserAsync(editDto, CancellationToken.None);
+        var result = await _userService.EditUserAsync(user.Id, editDto, CancellationToken.None);
 
         // Assert
         result.Should().NotBeNull();
@@ -387,7 +391,7 @@ public class UserServiceTests : IDisposable
             .ReturnsAsync(newImageUrl);
 
         // Act
-        var result = await _userService.EditUserAsync(editDto, CancellationToken.None);
+        var result = await _userService.EditUserAsync(user.Id, editDto, CancellationToken.None);
 
         // Assert
         result.Should().NotBeNull();
@@ -434,7 +438,7 @@ public class UserServiceTests : IDisposable
             .ReturnsAsync(newImageUrl);
 
         // Act: Must not throw
-        var result = await _userService.EditUserAsync(editDto, CancellationToken.None);
+        var result = await _userService.EditUserAsync(user.Id, editDto, CancellationToken.None);
 
         // Assert
         result.Should().NotBeNull();
@@ -467,8 +471,146 @@ public class UserServiceTests : IDisposable
         _concurrencyInterceptor.ThrowOnSaving = true;
 
         // Act & Assert
-        await FluentActions.Invoking(() => _userService.EditUserAsync(editDto, CancellationToken.None))
+        await FluentActions.Invoking(() => _userService.EditUserAsync(user.Id, editDto, CancellationToken.None))
             .Should().ThrowAsync<DbUpdateConcurrencyException>();
+    }
+
+    [Fact]
+    public async Task Test_EditUser_UsesIdParameter_ToUpdateCorrectUserWhenMultipleUsersExist()
+    {
+        // Arrange: Seed multiple users
+        var user1 = CreateTestUser(name: "User One", surname: "First", description: "Desc One");
+        var user2 = CreateTestUser(name: "User Two", surname: "Second", description: "Desc Two");
+        await _dbContext.Users.AddRangeAsync(user1, user2);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        var editDto = new UserEditDTO
+        {
+            Id = user1.Id,
+            Name = "Updated User One",
+            Surname = "Updated First",
+            Description = "Updated Desc One"
+        };
+
+        // Act: Pass user1.Id as the id parameter
+        var result = await _userService.EditUserAsync(user1.Id, editDto, CancellationToken.None);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Should().BeSameAs(editDto);
+
+        _dbContext.ChangeTracker.Clear();
+        var user1InDb = await _dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == user1.Id);
+        var user2InDb = await _dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == user2.Id);
+
+        user1InDb.Should().NotBeNull();
+        user1InDb!.Name.Should().Be("Updated User One");
+        user1InDb.Surname.Should().Be("Updated First");
+        user1InDb.Description.Should().Be("Updated Desc One");
+
+        // user2 must be completely untouched
+        user2InDb.Should().NotBeNull();
+        user2InDb!.Name.Should().Be("User Two");
+        user2InDb.Surname.Should().Be("Second");
+        user2InDb.Description.Should().Be("Desc Two");
+    }
+
+    [Fact]
+    public async Task Test_EditUser_UsesIdParameterToLocateUser_EvenWhenDtoIdIsDifferent()
+    {
+        // Arrange: Seed two users
+        var targetUser = CreateTestUser(name: "Target User", surname: "Target Surname");
+        var otherUser = CreateTestUser(name: "Other User", surname: "Other Surname");
+        await _dbContext.Users.AddRangeAsync(targetUser, otherUser);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        // DTO contains otherUser's Id, but we are editing targetUser via id parameter
+        var editDto = new UserEditDTO
+        {
+            Id = otherUser.Id,
+            Name = "Updated Target",
+            Surname = "Updated Target Surname",
+            Description = "Target user updated"
+        };
+
+        // Act: Use targetUser.Id as the id parameter
+        var result = await _userService.EditUserAsync(targetUser.Id, editDto, CancellationToken.None);
+
+        // Assert
+        result.Should().NotBeNull();
+
+        _dbContext.ChangeTracker.Clear();
+        var targetUserInDb = await _dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == targetUser.Id);
+        var otherUserInDb = await _dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == otherUser.Id);
+
+        // targetUser matched by the id parameter is updated
+        targetUserInDb.Should().NotBeNull();
+        targetUserInDb!.Name.Should().Be("Updated Target");
+        targetUserInDb.Surname.Should().Be("Updated Target Surname");
+
+        // otherUser whose Id was inside editDto remains unchanged
+        otherUserInDb.Should().NotBeNull();
+        otherUserInDb!.Name.Should().Be("Other User");
+        otherUserInDb.Surname.Should().Be("Other Surname");
+    }
+
+    [Fact]
+    public async Task Test_EditUser_WhenIdParameterNotFound_ReturnsNull_EvenWhenDtoIdMatchesExistingUser()
+    {
+        // Arrange: Seed an existing user
+        var existingUser = CreateTestUser(name: "Existing User", surname: "Original");
+        await _dbContext.Users.AddAsync(existingUser);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        var nonExistentId = Guid.NewGuid();
+        var editDto = new UserEditDTO
+        {
+            Id = existingUser.Id,
+            Name = "Should Not Be Applied",
+            Surname = "Should Not Be Applied"
+        };
+
+        // Act: Pass nonExistentId as the id parameter
+        var result = await _userService.EditUserAsync(nonExistentId, editDto, CancellationToken.None);
+
+        // Assert
+        result.Should().BeNull();
+
+        _dbContext.ChangeTracker.Clear();
+        var existingUserInDb = await _dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == existingUser.Id);
+        existingUserInDb.Should().NotBeNull();
+        existingUserInDb!.Name.Should().Be("Existing User");
+        existingUserInDb.Surname.Should().Be("Original");
+    }
+
+    [Fact]
+    public async Task Test_EditUser_WhenIdIsEmptyGuid_ReturnsNullAndDoesNotModifyUsers()
+    {
+        // Arrange: Seed a user
+        var user = CreateTestUser(name: "Original User");
+        await _dbContext.Users.AddAsync(user);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        var editDto = new UserEditDTO
+        {
+            Id = user.Id,
+            Name = "New Name"
+        };
+
+        // Act: Pass Guid.Empty
+        var result = await _userService.EditUserAsync(Guid.Empty, editDto, CancellationToken.None);
+
+        // Assert
+        result.Should().BeNull();
+
+        _dbContext.ChangeTracker.Clear();
+        var userInDb = await _dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == user.Id);
+        userInDb.Should().NotBeNull();
+        userInDb!.Name.Should().Be("Original User");
     }
 
     #endregion
@@ -541,13 +683,13 @@ public class UserServiceTests : IDisposable
         await FluentActions.Invoking(() => _userService.SearchUserByIdAsync(Guid.NewGuid(), cts.Token))
             .Should().ThrowAsync<OperationCanceledException>();
 
-        await FluentActions.Invoking(() => _userService.SearchUserByNameAsync("John", cts.Token))
+        await FluentActions.Invoking(() => _userService.SearchUsersByNameAsync("John", cts.Token))
             .Should().ThrowAsync<OperationCanceledException>();
 
         await FluentActions.Invoking(() => _userService.SearchUsersByRoleAsync(Role.User, cts.Token))
             .Should().ThrowAsync<OperationCanceledException>();
 
-        await FluentActions.Invoking(() => _userService.EditUserAsync(new UserEditDTO { Id = Guid.NewGuid() }, cts.Token))
+        await FluentActions.Invoking(() => _userService.EditUserAsync(Guid.NewGuid(), new UserEditDTO { Id = Guid.NewGuid() }, cts.Token))
             .Should().ThrowAsync<OperationCanceledException>();
 
         await FluentActions.Invoking(() => _userService.DeleteUserByIdAsync(Guid.NewGuid(), cts.Token))
