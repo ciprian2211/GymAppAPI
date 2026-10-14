@@ -20,8 +20,6 @@ public class ExerciseService : IExerciseService
 
     public async Task<ExerciseDTO?> AddExerciseAsync(ExerciseAddDTO dto, CancellationToken ct = default)
     {
-        string gifUrl = string.Empty;
-
         
         var newExercise = new Exercise
         {
@@ -92,7 +90,7 @@ public class ExerciseService : IExerciseService
     public async Task<List<ExerciseDTO>> AllExercisesAsync(int pageSize,int pageNumber,
         CancellationToken ct = default)
     {
-        if (pageSize == 0) return new List<ExerciseDTO>();
+        if (pageSize <= 0) return new List<ExerciseDTO>();
         
         var result = await _dbContext.Exercises
             .AsNoTracking()
@@ -173,7 +171,7 @@ public class ExerciseService : IExerciseService
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to delete old image {ImageUrl} for user {UserId}", exercise.GifUrl,
+                    _logger.LogWarning(ex, "Failed to delete old image {ImageUrl} for exercise {ExerciseId}", exercise.GifUrl,
                         id);
                 }
             }
@@ -203,6 +201,25 @@ public class ExerciseService : IExerciseService
             Description = exercise.Description,
             Category = exercise.Category,
             TargetedMuscle = exercise.TargetedMuscle
+        };
+    }
+
+    public async Task<ExerciseDTO?> SearchExerciseByIdAsync(Guid id, CancellationToken ct = default)
+    {
+        var result = await _dbContext.Exercises
+            .AsNoTracking()
+            .FirstOrDefaultAsync(e => e.Id == id,ct);
+        
+        if (result is null) return null;
+
+        return new ExerciseDTO
+        {
+            Id = result.Id,
+            Name = result.Name,
+            Description = result.Description,
+            GifUrl = result.GifUrl,
+            Category = result.Category,
+            TargetedMuscle = result.TargetedMuscle
         };
     }
 }

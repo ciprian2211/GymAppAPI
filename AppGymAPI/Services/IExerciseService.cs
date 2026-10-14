@@ -21,5 +21,6 @@ public interface IExerciseService
 
     Task<ExerciseDTO?> EditExerciseAsync(Guid id, ExerciseAddDTO dto,
         CancellationToken ct = default);
-
+    
+    Task<ExerciseDTO?> SearchExerciseByIdAsync(Guid id, CancellationToken ct = default);
 }
