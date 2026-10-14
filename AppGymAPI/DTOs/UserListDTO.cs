@@ -9,4 +9,4 @@ public record UserListDTO
     public string Email { get; set; } = string.Empty;
 
     public float ReviewStars { get; set; } = 0.0f;
-};
+}

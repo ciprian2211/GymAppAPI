@@ -2,7 +2,6 @@ using AppGymAPI.Data;
 using AppGymAPI.DTOs;
 using AppGymAPI.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace AppGymAPI.Services;
 
