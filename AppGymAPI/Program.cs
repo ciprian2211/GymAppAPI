@@ -44,7 +44,7 @@ builder.Services.Configure<AppGymAPI.Settings.CloudinarySettings>(builder.Config
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPhotoService, PhotoService>();
-
+builder.Services.AddScoped<IExerciseService, ExerciseService>();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
@@ -57,5 +57,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 AuthEndpoints.Map(app);
 UserEndpoints.Map(app);
+ExerciseEndpoints.Map(app);
 app.Run();
 

@@ -30,9 +30,6 @@ public class RegisterUserDTO
     [Required(ErrorMessage = "Please confirm your password")]
     [DataType(DataType.Password)]
     [StringLength(100, MinimumLength = 8, ErrorMessage = "Password must be between {2} and {1} characters.")]
-    [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$",
-        ErrorMessage =
-            "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.")]
     [Compare("Password", ErrorMessage = "The passwords do not match.")]
     public string ConfirmPassword { get; set; } = string.Empty;
 

@@ -2,7 +2,7 @@ using AppGymAPI.Models;
 
 namespace AppGymAPI.DTOs;
 
-public record UserDTO
+public class UserDTO
 {
     public Guid Id { get; set; }
     
