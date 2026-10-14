@@ -57,5 +57,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 AuthEndpoints.Map(app);
 UserEndpoints.Map(app);
+ExerciseEndpoints.Map(app);
 app.Run();
 
