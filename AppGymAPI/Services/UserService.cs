@@ -124,6 +124,21 @@ public class UserService : IUserService
             
         if (user is null) return false;
 
+        if (!string.IsNullOrEmpty(user.ImageUrl) && !user.ImageUrl.Contains("user-profile.png"))
+        {
+            try
+            {
+                var uri = new Uri(user.ImageUrl);
+                var fileName = System.IO.Path.GetFileNameWithoutExtension(uri.LocalPath);
+                var publicId = $"appgymapi/{fileName}";
+                await _photoService.DeletePhotoAsync(publicId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to delete old image {ImageUrl} for user {UserId}", user.ImageUrl, id);
+            }
+        }
+
         _appDbContext.Users.Remove(user);
         
         try

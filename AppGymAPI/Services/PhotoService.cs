@@ -52,7 +52,43 @@ public class PhotoService : IPhotoService
 
         if (uploadResult.Error != null)
         {
-            // Log the error if needed
+            return null;
+        }
+
+        return uploadResult.SecureUrl.ToString();
+    }
+
+    public async Task<string?> AddGifAsync(IFormFile file)
+    {
+        if (file.Length <= 0) return null;
+
+        double sizeInMb = file.Length / (1024.0 * 1024.0);
+        string contentType = file.ContentType;
+
+        var allowedTypes = new[] { "image/gif" };
+
+        if (!allowedTypes.Contains(contentType))
+        {
+            return null;
+        }
+
+        if (sizeInMb > 15)
+        {
+            return null;
+        }
+
+        await using var stream = file.OpenReadStream();
+
+        var uploadParams = new ImageUploadParams
+        {
+            File = new FileDescription(file.FileName, stream),
+            Folder = "appgymapi"
+        };
+
+        var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+
+        if (uploadResult.Error != null)
+        {
             return null;
         }
 

@@ -69,4 +69,40 @@ public class PhotoServiceTests
 
         result.Should().BeNull();
     }
+
+    [Fact]
+    public async Task AddGifAsync_WhenFileIsEmpty_ReturnsNull()
+    {
+        var file = CreateFormFile(0, "image/gif", "test.gif");
+
+        var result = await _photoService.AddGifAsync(file);
+
+        result.Should().BeNull();
+    }
+
+    [Theory]
+    [InlineData("application/pdf")]
+    [InlineData("text/plain")]
+    [InlineData("image/jpeg")]
+    [InlineData("image/png")]
+    [InlineData("video/mp4")]
+    public async Task AddGifAsync_WhenContentTypeNotAllowed_ReturnsNull(string invalidContentType)
+    {
+        var file = CreateFormFile(1024, invalidContentType, "test.gif");
+
+        var result = await _photoService.AddGifAsync(file);
+
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task AddGifAsync_WhenFileSizeExceeds15MB_ReturnsNull()
+    {
+        long sixteenMb = 16L * 1024 * 1024;
+        var file = CreateFormFile(sixteenMb, "image/gif", "test.gif");
+
+        var result = await _photoService.AddGifAsync(file);
+
+        result.Should().BeNull();
+    }
 }

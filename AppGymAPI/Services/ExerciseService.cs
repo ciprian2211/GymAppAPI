@@ -33,7 +33,7 @@ public class ExerciseService : IExerciseService
         {
             try
             {
-                var photo = await _photoService.AddPhotoAsync(dto.Gif);
+                var photo = await _photoService.AddGifAsync(dto.Gif);
                 if (string.IsNullOrEmpty(photo)) return null;
                 newExercise.GifUrl = photo;
             }
@@ -63,6 +63,21 @@ public class ExerciseService : IExerciseService
             .FirstOrDefaultAsync(exercise => exercise.Id == id,ct);
         
         if (result is null) return false;
+
+        if (!string.IsNullOrEmpty(result.GifUrl))
+        {
+            try
+            {
+                var uri = new Uri(result.GifUrl);
+                var fileName = System.IO.Path.GetFileNameWithoutExtension(uri.LocalPath);
+                var publicId = $"appgymapi/{fileName}";
+                await _photoService.DeletePhotoAsync(publicId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to delete old image {ImageUrl} for exercise {ExerciseId}", result.GifUrl, id);
+            }
+        }
         
         _dbContext.Exercises.Remove(result);
         await _dbContext.SaveChangesAsync(ct);
@@ -184,7 +199,7 @@ public class ExerciseService : IExerciseService
                 }
             }
 
-            var gifUrl = await _photoService.AddPhotoAsync(dto.Gif);
+            var gifUrl = await _photoService.AddGifAsync(dto.Gif);
 
             if (!string.IsNullOrEmpty(gifUrl))
             {

@@ -115,7 +115,7 @@ public class ExerciseServiceTests : IDisposable
         result.TargetedMuscle.Should().Be(dto.TargetedMuscle);
         result.GifUrl.Should().BeEmpty();
 
-        _photoServiceMock.Verify(p => p.AddPhotoAsync(It.IsAny<IFormFile>()), Times.Never);
+        _photoServiceMock.Verify(p => p.AddGifAsync(It.IsAny<IFormFile>()), Times.Never);
 
         var savedExercise = await _dbContext.Exercises.FirstOrDefaultAsync(e => e.Id == result.Id);
         savedExercise.Should().NotBeNull();
@@ -143,7 +143,7 @@ public class ExerciseServiceTests : IDisposable
         result.Should().NotBeNull();
         result!.Name.Should().Be(dto.Name);
         result.GifUrl.Should().BeEmpty();
-        _photoServiceMock.Verify(p => p.AddPhotoAsync(It.IsAny<IFormFile>()), Times.Never);
+        _photoServiceMock.Verify(p => p.AddGifAsync(It.IsAny<IFormFile>()), Times.Never);
     }
 
     [Fact]
@@ -162,7 +162,7 @@ public class ExerciseServiceTests : IDisposable
         const string expectedUrl = "https://cloudinary.com/appgymapi/pullup.gif";
 
         _photoServiceMock
-            .Setup(p => p.AddPhotoAsync(file))
+            .Setup(p => p.AddGifAsync(file))
             .ReturnsAsync(expectedUrl);
 
         // Act
@@ -173,7 +173,7 @@ public class ExerciseServiceTests : IDisposable
         result!.Name.Should().Be(dto.Name);
         result.GifUrl.Should().Be(expectedUrl);
 
-        _photoServiceMock.Verify(p => p.AddPhotoAsync(file), Times.Once);
+        _photoServiceMock.Verify(p => p.AddGifAsync(file), Times.Once);
 
         var savedExercise = await _dbContext.Exercises.FirstOrDefaultAsync(e => e.Id == result.Id);
         savedExercise.Should().NotBeNull();
@@ -197,7 +197,7 @@ public class ExerciseServiceTests : IDisposable
         };
 
         _photoServiceMock
-            .Setup(p => p.AddPhotoAsync(file))
+            .Setup(p => p.AddGifAsync(file))
             .ReturnsAsync(uploadedUrl);
 
         // Act
@@ -224,7 +224,7 @@ public class ExerciseServiceTests : IDisposable
         };
 
         _photoServiceMock
-            .Setup(p => p.AddPhotoAsync(file))
+            .Setup(p => p.AddGifAsync(file))
             .ThrowsAsync(new InvalidOperationException("Upload failed"));
 
         // Act & Assert
@@ -278,6 +278,53 @@ public class ExerciseServiceTests : IDisposable
 
         // Assert
         result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task DeleteExerciseAsync_WhenExerciseHasGifUrl_DeletesPhotoFromCloudinary()
+    {
+        var exercise = CreateTestExercise(
+            name: "Barbell Curl",
+            gifUrl: "https://cloudinary.com/appgymapi/curl_exercise.gif");
+        await _dbContext.Exercises.AddAsync(exercise);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        _photoServiceMock.Setup(p => p.DeletePhotoAsync("appgymapi/curl_exercise")).ReturnsAsync(true);
+
+        var result = await _exerciseService.DeleteExerciseAsync(exercise.Id);
+
+        result.Should().BeTrue();
+        _photoServiceMock.Verify(p => p.DeletePhotoAsync("appgymapi/curl_exercise"), Times.Once);
+        var inDb = await _dbContext.Exercises.FirstOrDefaultAsync(e => e.Id == exercise.Id);
+        inDb.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task DeleteExerciseAsync_WhenPhotoDeletionFails_LogsWarningAndStillDeletesFromDb()
+    {
+        var exercise = CreateTestExercise(
+            name: "Barbell Curl",
+            gifUrl: "https://cloudinary.com/appgymapi/curl_exercise.gif");
+        await _dbContext.Exercises.AddAsync(exercise);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        _photoServiceMock.Setup(p => p.DeletePhotoAsync("appgymapi/curl_exercise")).ThrowsAsync(new Exception("Network error"));
+
+        var result = await _exerciseService.DeleteExerciseAsync(exercise.Id);
+
+        result.Should().BeTrue();
+        _loggerMock.Verify(
+            x => x.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v != null && v.ToString()!.Contains("Failed to delete old image")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+        var inDb = await _dbContext.Exercises.FirstOrDefaultAsync(e => e.Id == exercise.Id);
+        inDb.Should().BeNull();
     }
 
     #endregion
@@ -534,7 +581,7 @@ public class ExerciseServiceTests : IDisposable
         result.TargetedMuscle.Should().Be(TargetedMuscle.Glutes);
 
         _photoServiceMock.Verify(p => p.DeletePhotoAsync(It.IsAny<string>()), Times.Never);
-        _photoServiceMock.Verify(p => p.AddPhotoAsync(It.IsAny<IFormFile>()), Times.Never);
+        _photoServiceMock.Verify(p => p.AddGifAsync(It.IsAny<IFormFile>()), Times.Never);
 
         _dbContext.ChangeTracker.Clear();
         var updatedInDb = await _dbContext.Exercises.FirstOrDefaultAsync(e => e.Id == exercise.Id);
@@ -563,7 +610,7 @@ public class ExerciseServiceTests : IDisposable
         };
 
         const string newUrl = "https://example.com/appgymapi/new_image.gif";
-        _photoServiceMock.Setup(p => p.AddPhotoAsync(file)).ReturnsAsync(newUrl);
+        _photoServiceMock.Setup(p => p.AddGifAsync(file)).ReturnsAsync(newUrl);
 
         // Act
         var result = await _exerciseService.EditExerciseAsync(exercise.Id, editDto);
@@ -573,7 +620,7 @@ public class ExerciseServiceTests : IDisposable
         result!.Id.Should().Be(exercise.Id);
         result.GifUrl.Should().Be(newUrl);
         _photoServiceMock.Verify(p => p.DeletePhotoAsync(It.IsAny<string>()), Times.Never);
-        _photoServiceMock.Verify(p => p.AddPhotoAsync(file), Times.Once);
+        _photoServiceMock.Verify(p => p.AddGifAsync(file), Times.Once);
 
         _dbContext.ChangeTracker.Clear();
         var updatedInDb = await _dbContext.Exercises.FirstOrDefaultAsync(e => e.Id == exercise.Id);
@@ -601,7 +648,7 @@ public class ExerciseServiceTests : IDisposable
 
         const string newUrl = "https://cloudinary.com/appgymapi/new_exercise_photo.gif";
         _photoServiceMock.Setup(p => p.DeletePhotoAsync("appgymapi/old_exercise_photo")).ReturnsAsync(true);
-        _photoServiceMock.Setup(p => p.AddPhotoAsync(file)).ReturnsAsync(newUrl);
+        _photoServiceMock.Setup(p => p.AddGifAsync(file)).ReturnsAsync(newUrl);
 
         // Act
         var result = await _exerciseService.EditExerciseAsync(exercise.Id, editDto);
@@ -611,7 +658,7 @@ public class ExerciseServiceTests : IDisposable
         result!.Id.Should().Be(exercise.Id);
         result.GifUrl.Should().Be(newUrl);
         _photoServiceMock.Verify(p => p.DeletePhotoAsync("appgymapi/old_exercise_photo"), Times.Once);
-        _photoServiceMock.Verify(p => p.AddPhotoAsync(file), Times.Once);
+        _photoServiceMock.Verify(p => p.AddGifAsync(file), Times.Once);
 
         _dbContext.ChangeTracker.Clear();
         var updatedInDb = await _dbContext.Exercises.FirstOrDefaultAsync(e => e.Id == exercise.Id);
@@ -643,7 +690,7 @@ public class ExerciseServiceTests : IDisposable
             .ThrowsAsync(new InvalidOperationException("Deletion failed"));
 
         _photoServiceMock
-            .Setup(p => p.AddPhotoAsync(file))
+            .Setup(p => p.AddGifAsync(file))
             .ReturnsAsync(newUrl);
 
         // Act
