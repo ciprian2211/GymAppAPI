@@ -1,6 +1,6 @@
 namespace AppGymAPI.DTOs;
 
-public record UserListDTO
+public record UserListDto
 {
     public string Name { get; set; } = string.Empty;
 

@@ -24,7 +24,7 @@ public class AuthService : IAuthService
         _logger = logger;
     }
     
-    public async Task<AuthResponseDTO?> LoginUserAsync(LoginUserDTO dto)
+    public async Task<AuthResponseDto?> LoginUserAsync(LoginUserDto dto)
     {
         var user = await _userManager.FindByEmailAsync(dto.Email);
         if (user == null)
@@ -50,14 +50,14 @@ public class AuthService : IAuthService
 
         _logger.LogInformation("User {Email} logged in successfully", dto.Email);
 
-        return new AuthResponseDTO
+        return new AuthResponseDto
         {
             Token = jwtToken,
             RefreshToken = refreshToken
         };
     }
 
-    public async Task<bool> RegisterUserAsync(RegisterUserDTO dto)
+    public async Task<bool> RegisterUserAsync(RegisterUserDto dto)
     {
         string imageUrl = string.Empty;
         if (dto.ProfileImage != null && dto.ProfileImage.Length > 0)
@@ -90,7 +90,7 @@ public class AuthService : IAuthService
         return false;
     }
 
-    public async Task<AuthResponseDTO?> RefreshTokenAsync(RefreshTokenRequestDTO dto)
+    public async Task<AuthResponseDto?> RefreshTokenAsync(RefreshTokenRequestDto dto)
     {
         var principal = GetPrincipalFromExpiredToken(dto.Token);
         if (principal == null)
@@ -135,7 +135,7 @@ public class AuthService : IAuthService
 
         _logger.LogInformation("Tokens refreshed successfully for user {Email}", email);
 
-        return new AuthResponseDTO
+        return new AuthResponseDto
         {
             Token = newJwtToken,
             RefreshToken = newRefreshToken

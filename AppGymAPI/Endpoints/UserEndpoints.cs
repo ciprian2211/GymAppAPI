@@ -37,7 +37,7 @@ public static class UserEndpoints
         return Results.Ok(result);
     }
 
-    private static async Task<IResult> PutUserAsync(IUserService userService, UserEditDTO request,Guid id,
+    private static async Task<IResult> PutUserAsync(IUserService userService, UserEditDto request,Guid id,
         CancellationToken ct = default)
     {
         var result = await userService.EditUserAsync(id,request, ct);

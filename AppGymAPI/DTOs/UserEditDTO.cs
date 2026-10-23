@@ -3,7 +3,7 @@ using AppGymAPI.Models;
 
 namespace AppGymAPI.DTOs;
 
-public class UserEditDTO
+public class UserEditDto
 {
     public Guid Id { get; set; }
     public IFormFile? ProfileImage { get; set; }

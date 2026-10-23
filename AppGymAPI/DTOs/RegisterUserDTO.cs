@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace AppGymAPI.DTOs;
 
-public class RegisterUserDTO
+public class RegisterUserDto
 {
     public IFormFile? ProfileImage { get; set; }
     
