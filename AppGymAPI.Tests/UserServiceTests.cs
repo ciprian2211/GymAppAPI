@@ -272,7 +272,7 @@ public class UserServiceTests : IDisposable
         // Assert
         result.Should().BeNull();
         _photoServiceMock.Verify(p => p.AddPhotoAsync(It.IsAny<IFormFile>()), Times.Never);
-        _photoServiceMock.Verify(p => p.DeletePhotoAsync(It.IsAny<string>()), Times.Never);
+        _photoServiceMock.Verify(p => p.DeletePhotoByUrlAsync(It.IsAny<string>()), Times.Never);
     }
 
     [Fact]
@@ -303,7 +303,7 @@ public class UserServiceTests : IDisposable
         result.Should().NotBeNull();
         result.Should().BeSameAs(editDto);
         _photoServiceMock.Verify(p => p.AddPhotoAsync(It.IsAny<IFormFile>()), Times.Never);
-        _photoServiceMock.Verify(p => p.DeletePhotoAsync(It.IsAny<string>()), Times.Never);
+        _photoServiceMock.Verify(p => p.DeletePhotoByUrlAsync(It.IsAny<string>()), Times.Never);
 
         // Verify changes persisted to DB
         _dbContext.ChangeTracker.Clear();
@@ -347,7 +347,7 @@ public class UserServiceTests : IDisposable
         // Assert
         result.Should().NotBeNull();
         _photoServiceMock.Verify(p => p.AddPhotoAsync(dummyImage), Times.Once);
-        _photoServiceMock.Verify(p => p.DeletePhotoAsync(It.IsAny<string>()), Times.Never);
+        _photoServiceMock.Verify(p => p.DeletePhotoByUrlAsync(It.IsAny<string>()), Times.Never);
 
         // Verify DB state
         _dbContext.ChangeTracker.Clear();
@@ -383,7 +383,7 @@ public class UserServiceTests : IDisposable
         };
 
         _photoServiceMock
-            .Setup(p => p.DeletePhotoAsync("appgymapi/old_pic"))
+            .Setup(p => p.DeletePhotoByUrlAsync(oldImageUrl))
             .ReturnsAsync(true);
 
         _photoServiceMock
@@ -395,7 +395,7 @@ public class UserServiceTests : IDisposable
 
         // Assert
         result.Should().NotBeNull();
-        _photoServiceMock.Verify(p => p.DeletePhotoAsync("appgymapi/old_pic"), Times.Once);
+        _photoServiceMock.Verify(p => p.DeletePhotoByUrlAsync(oldImageUrl), Times.Once);
         _photoServiceMock.Verify(p => p.AddPhotoAsync(dummyImage), Times.Once);
 
         _dbContext.ChangeTracker.Clear();
@@ -430,7 +430,7 @@ public class UserServiceTests : IDisposable
         };
 
         _photoServiceMock
-            .Setup(p => p.DeletePhotoAsync(It.IsAny<string>()))
+            .Setup(p => p.DeletePhotoByUrlAsync(It.IsAny<string>()))
             .ThrowsAsync(new Exception("Cloudinary deletion failed"));
 
         _photoServiceMock
@@ -442,7 +442,7 @@ public class UserServiceTests : IDisposable
 
         // Assert
         result.Should().NotBeNull();
-        _photoServiceMock.Verify(p => p.DeletePhotoAsync("appgymapi/old_pic"), Times.Once);
+        _photoServiceMock.Verify(p => p.DeletePhotoByUrlAsync(oldImageUrl), Times.Once);
         _photoServiceMock.Verify(p => p.AddPhotoAsync(dummyImage), Times.Once);
 
         _dbContext.ChangeTracker.Clear();
@@ -635,6 +635,28 @@ public class UserServiceTests : IDisposable
         _dbContext.ChangeTracker.Clear();
         var deletedUser = await _dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == user.Id);
         deletedUser.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Test_DeleteUserById_WhenUserHasImage_DeletesImageFromCloudinary()
+    {
+        // Arrange
+        const string imageUrl = "https://res.cloudinary.com/demo/image/upload/v1234/appgymapi/user_avatar.jpg";
+        var user = CreateTestUser(name: "DeleteMeWithImage", imageUrl: imageUrl);
+        await _dbContext.Users.AddAsync(user);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        _photoServiceMock
+            .Setup(p => p.DeletePhotoByUrlAsync(imageUrl))
+            .ReturnsAsync(true);
+
+        // Act
+        var result = await _userService.DeleteUserByIdAsync(user.Id, CancellationToken.None);
+
+        // Assert
+        result.Should().BeTrue();
+        _photoServiceMock.Verify(p => p.DeletePhotoByUrlAsync(imageUrl), Times.Once);
     }
 
     [Fact]

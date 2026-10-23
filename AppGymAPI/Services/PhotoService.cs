@@ -102,4 +102,23 @@ public class PhotoService : IPhotoService
 
         return result.Result == "ok";
     }
+
+    public async Task<bool> DeletePhotoByUrlAsync(string photoUrl)
+    {
+        if (string.IsNullOrWhiteSpace(photoUrl)) return false;
+
+        try
+        {
+            var uri = new Uri(photoUrl);
+            var fileName = System.IO.Path.GetFileNameWithoutExtension(uri.LocalPath);
+            if (string.IsNullOrEmpty(fileName)) return false;
+
+            var publicId = $"appgymapi/{fileName}";
+            return await DeletePhotoAsync(publicId);
+        }
+        catch
+        {
+            return false;
+        }
+    }
 }

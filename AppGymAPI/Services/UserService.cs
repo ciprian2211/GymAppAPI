@@ -79,16 +79,11 @@ public class UserService : IUserService
         
         if (dto.ProfileImage != null && dto.ProfileImage.Length > 0)
         {
-         
-            if (!string.IsNullOrEmpty(user.ImageUrl))
+            if (!string.IsNullOrEmpty(user.ImageUrl) && !user.ImageUrl.Contains("user-profile.png"))
             {
-                try 
+                try
                 {
-                   
-                    var uri = new Uri(user.ImageUrl);
-                    var fileName = System.IO.Path.GetFileNameWithoutExtension(uri.LocalPath);
-                    var publicId = $"appgymapi/{fileName}";
-                    await _photoService.DeletePhotoAsync(publicId);
+                    await _photoService.DeletePhotoByUrlAsync(user.ImageUrl);
                 }
                 catch (Exception ex)
                 {
@@ -96,7 +91,6 @@ public class UserService : IUserService
                 }
             }
 
-       
             var imageUrl = await _photoService.AddPhotoAsync(dto.ProfileImage);
             if (!string.IsNullOrEmpty(imageUrl))
             {
@@ -128,10 +122,7 @@ public class UserService : IUserService
         {
             try
             {
-                var uri = new Uri(user.ImageUrl);
-                var fileName = System.IO.Path.GetFileNameWithoutExtension(uri.LocalPath);
-                var publicId = $"appgymapi/{fileName}";
-                await _photoService.DeletePhotoAsync(publicId);
+                await _photoService.DeletePhotoByUrlAsync(user.ImageUrl);
             }
             catch (Exception ex)
             {

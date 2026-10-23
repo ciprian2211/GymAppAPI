@@ -68,10 +68,7 @@ public class ExerciseService : IExerciseService
         {
             try
             {
-                var uri = new Uri(result.GifUrl);
-                var fileName = System.IO.Path.GetFileNameWithoutExtension(uri.LocalPath);
-                var publicId = $"appgymapi/{fileName}";
-                await _photoService.DeletePhotoAsync(publicId);
+                await _photoService.DeletePhotoByUrlAsync(result.GifUrl);
             }
             catch (Exception ex)
             {
@@ -187,16 +184,11 @@ public class ExerciseService : IExerciseService
             {
                 try
                 {
-
-                    var uri = new Uri(exercise.GifUrl);
-                    var fileName = System.IO.Path.GetFileNameWithoutExtension(uri.LocalPath);
-                    var publicId = $"appgymapi/{fileName}";
-                    await _photoService.DeletePhotoAsync(publicId);
+                    await _photoService.DeletePhotoByUrlAsync(exercise.GifUrl);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to delete old image {ImageUrl} for exercise {ExerciseId}", exercise.GifUrl,
-                        id);
+                    _logger.LogWarning(ex, "Failed to delete old image {ImageUrl} for exercise {ExerciseId}", exercise.GifUrl, id);
                 }
             }
 
