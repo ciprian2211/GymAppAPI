@@ -1,7 +1,7 @@
 using AppGymAPI.DTOs;
+using AppGymAPI.Extensions;
 using AppGymAPI.Models;
 using AppGymAPI.Services;
-
 
 namespace AppGymAPI.Endpoints;
 
@@ -9,14 +9,17 @@ public static class ExerciseEndpoints
 {
     public static void Map(WebApplication app)
     {
-        var group = app.MapGroup("/api/v1/exercises");
+        var group = app.MapGroup("/api/v1/exercises").RequireAuthorization();
         group.MapGet("{id:guid}", GetExerciseByIdAsync);
         group.MapGet("by-name/{name}", GetExerciseByNameAsync);
         group.MapGet("by-category/{exerciseType}", GetAllExercisesByCategoryAsync);
         group.MapGet("by-targeted-muscle/{targetedMuscle}", GetAllExercisesByTargetedMuscleAsync);
-        group.MapPost("", PostExerciseAsync);
-        group.MapPut("edit/{id:guid}", PutExerciseAsync);
-        group.MapDelete("delete/{id:guid}", DeleteExerciseAsync);
+        group.MapPost("", PostExerciseAsync)
+            .RequireRoles(Role.Admin);
+        group.MapPut("edit/{id:guid}", PutExerciseAsync)
+            .RequireRoles(Role.Admin);
+        group.MapDelete("delete/{id:guid}", DeleteExerciseAsync)
+            .RequireRoles(Role.Admin);
     }
 
     private static async Task<IResult> PostExerciseAsync(ExerciseAddDto request,

@@ -1,4 +1,5 @@
 using AppGymAPI.DTOs;
+using AppGymAPI.Extensions;
 using AppGymAPI.Models;
 using AppGymAPI.Services;
 
@@ -8,12 +9,14 @@ public static class UserEndpoints
 {
     public static void Map(WebApplication app)
     {
-        var group = app.MapGroup("/api/v1/users");
+        var group = app.MapGroup("/api/v1/users").RequireAuthorization();
         group.MapGet("{id:guid}", GetUserByIdAsync);
         group.MapGet("by-name/{name}", GetUsersByNameAsync);
         group.MapGet("by-role/{role}", GetUsersByRoleAsync);
-        group.MapPut("{id:guid}", PutUserAsync);
-        group.MapDelete("{id:guid}", DeleteUserAsync);
+        group.MapPut("{id:guid}", PutUserAsync)
+            .RequireOwnerOrRole("id", Role.Admin);
+        group.MapDelete("{id:guid}", DeleteUserAsync)
+            .RequireRoles(Role.Admin);
     }
 
     private static async Task<IResult> GetUserByIdAsync(IUserService userService, Guid id,

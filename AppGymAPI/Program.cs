@@ -55,6 +55,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
 AuthEndpoints.Map(app);
 UserEndpoints.Map(app);
 ExerciseEndpoints.Map(app);
