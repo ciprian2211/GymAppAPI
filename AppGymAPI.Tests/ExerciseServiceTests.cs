@@ -302,8 +302,10 @@ public class ExerciseServiceTests : IDisposable
 
         // Assert
         result.Should().NotBeNull();
-        result!.Name.Should().Be(exercise.Name);
+        result!.Id.Should().Be(exercise.Id);
+        result.Name.Should().Be(exercise.Name);
         result.Description.Should().Be(exercise.Description);
+        result.GifUrl.Should().Be(exercise.GifUrl);
         result.Category.Should().Be(exercise.Category);
         result.TargetedMuscle.Should().Be(exercise.TargetedMuscle);
     }
@@ -360,6 +362,12 @@ public class ExerciseServiceTests : IDisposable
         page2.Should().HaveCount(2);
         page3.Should().HaveCount(1);
 
+        page1.Should().AllSatisfy(e =>
+        {
+            e.Id.Should().NotBeEmpty();
+            e.GifUrl.Should().NotBeNull();
+        });
+
         var allRetrieved = page1.Concat(page2).Concat(page3).Select(e => e.Name).ToList();
         allRetrieved.Should().HaveCount(5);
         allRetrieved.Should().OnlyHaveUniqueItems();
@@ -403,6 +411,7 @@ public class ExerciseServiceTests : IDisposable
         // Assert
         result.Should().HaveCount(2);
         result.Should().OnlyContain(e => e.Category == ExerciseType.Weightlifting);
+        result.Should().AllSatisfy(e => e.Id.Should().NotBeEmpty());
         result.Select(e => e.Name).Should().Contain(new[] { "Squat", "Bench" });
     }
 
@@ -444,6 +453,7 @@ public class ExerciseServiceTests : IDisposable
         // Assert
         result.Should().HaveCount(2);
         result.Should().OnlyContain(e => e.TargetedMuscle == TargetedMuscle.Chest);
+        result.Should().AllSatisfy(e => e.Id.Should().NotBeEmpty());
         result.Select(e => e.Name).Should().Contain(new[] { "Incline Bench", "Cable Fly" });
     }
 
@@ -516,8 +526,10 @@ public class ExerciseServiceTests : IDisposable
 
         // Assert
         result.Should().NotBeNull();
-        result!.Name.Should().Be("New Name");
+        result!.Id.Should().Be(exercise.Id);
+        result.Name.Should().Be("New Name");
         result.Description.Should().Be("New Desc");
+        result.GifUrl.Should().Be("https://example.com/existing.gif");
         result.Category.Should().Be(ExerciseType.Weightlifting);
         result.TargetedMuscle.Should().Be(TargetedMuscle.Glutes);
 
@@ -558,6 +570,8 @@ public class ExerciseServiceTests : IDisposable
 
         // Assert
         result.Should().NotBeNull();
+        result!.Id.Should().Be(exercise.Id);
+        result.GifUrl.Should().Be(newUrl);
         _photoServiceMock.Verify(p => p.DeletePhotoAsync(It.IsAny<string>()), Times.Never);
         _photoServiceMock.Verify(p => p.AddPhotoAsync(file), Times.Once);
 
@@ -594,6 +608,8 @@ public class ExerciseServiceTests : IDisposable
 
         // Assert
         result.Should().NotBeNull();
+        result!.Id.Should().Be(exercise.Id);
+        result.GifUrl.Should().Be(newUrl);
         _photoServiceMock.Verify(p => p.DeletePhotoAsync("appgymapi/old_exercise_photo"), Times.Once);
         _photoServiceMock.Verify(p => p.AddPhotoAsync(file), Times.Once);
 
@@ -635,6 +651,8 @@ public class ExerciseServiceTests : IDisposable
 
         // Assert
         result.Should().NotBeNull();
+        result!.Id.Should().Be(exercise.Id);
+        result.GifUrl.Should().Be(newUrl);
         _loggerMock.Verify(
             x => x.Log(
                 LogLevel.Warning,
@@ -672,7 +690,8 @@ public class ExerciseServiceTests : IDisposable
 
         // Assert
         result.Should().NotBeNull();
-        result!.Name.Should().Be("Updated First Exercise");
+        result!.Id.Should().Be(ex1.Id);
+        result.Name.Should().Be("Updated First Exercise");
 
         _dbContext.ChangeTracker.Clear();
         var ex1InDb = await _dbContext.Exercises.FirstOrDefaultAsync(e => e.Id == ex1.Id);

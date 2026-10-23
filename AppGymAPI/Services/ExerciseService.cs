@@ -80,8 +80,10 @@ public class ExerciseService : IExerciseService
 
         return new ExerciseDto
         {
+            Id = result.Id,
             Name = result.Name,
             Description = result.Description,
+            GifUrl = result.GifUrl,
             Category = result.Category,
             TargetedMuscle = result.TargetedMuscle
         };
@@ -98,8 +100,10 @@ public class ExerciseService : IExerciseService
             .Take(pageSize)
             .Select(e => new ExerciseDto
             {
+                Id = e.Id,
                 Name = e.Name,
                 Description = e.Description,
+                GifUrl = e.GifUrl,
                 Category = e.Category,
                 TargetedMuscle = e.TargetedMuscle
             })
@@ -116,8 +120,10 @@ public class ExerciseService : IExerciseService
             .Where(e => e.Category == category)
             .Select(e => new ExerciseDto
             {
+                Id = e.Id,
                 Name = e.Name,
                 Description = e.Description,
+                GifUrl = e.GifUrl,
                 Category = e.Category,
                 TargetedMuscle = e.TargetedMuscle
             })
@@ -134,8 +140,10 @@ public class ExerciseService : IExerciseService
             .Where(e => e.TargetedMuscle == targetedMuscle)
             .Select(e => new ExerciseDto
             {
+                Id = e.Id,
                 Name = e.Name,
                 Description = e.Description,
+                GifUrl = e.GifUrl,
                 Category = e.Category,
                 TargetedMuscle = e.TargetedMuscle
             })
@@ -197,8 +205,10 @@ public class ExerciseService : IExerciseService
 
         return new ExerciseDto
         {
+            Id = exercise.Id,
             Name = exercise.Name,
             Description = exercise.Description,
+            GifUrl = exercise.GifUrl,
             Category = exercise.Category,
             TargetedMuscle = exercise.TargetedMuscle
         };

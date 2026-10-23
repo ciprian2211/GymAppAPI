@@ -16,12 +16,14 @@ public class AuthService : IAuthService
     private readonly UserManager<User> _userManager;
     private readonly IConfiguration _configuration;
     private readonly ILogger<AuthService> _logger;
+    private readonly IPhotoService _photoService;
     
-    public AuthService(UserManager<User> userManager, IConfiguration configuration, ILogger<AuthService> logger)
+    public AuthService(UserManager<User> userManager, IConfiguration configuration, ILogger<AuthService> logger, IPhotoService photoService)
     {
         _userManager = userManager;
         _configuration = configuration;
         _logger = logger;
+        _photoService = photoService;
     }
     
     public async Task<AuthResponseDto?> LoginUserAsync(LoginUserDto dto)
@@ -59,10 +61,19 @@ public class AuthService : IAuthService
 
     public async Task<bool> RegisterUserAsync(RegisterUserDto dto)
     {
-        string imageUrl = string.Empty;
+        string? imageUrl = string.Empty;
         if (dto.ProfileImage != null && dto.ProfileImage.Length > 0)
         {
-            imageUrl = "poza pentru ca da";
+            imageUrl = await _photoService.AddPhotoAsync(dto.ProfileImage);
+            if (imageUrl is null)
+            {
+                imageUrl = "https://res.cloudinary.com/n7iduzxq/image/upload/v1792748390/user-profile.png";
+            }
+            
+        }
+        else
+        {
+            imageUrl = "https://res.cloudinary.com/n7iduzxq/image/upload/v1792748390/user-profile.png";
         }
 
         var newUser = new User

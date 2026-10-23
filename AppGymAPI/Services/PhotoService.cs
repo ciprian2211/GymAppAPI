@@ -23,8 +23,24 @@ public class PhotoService : IPhotoService
     public async Task<string?> AddPhotoAsync(IFormFile file)
     {
         if (file.Length <= 0) return null;
+        
+        double sizeInMb = file.Length / (1024.0 * 1024.0);
+        string contentType = file.ContentType;
 
+        var allowedTypes = new[] { "image/jpeg", "image/png", "image/jpg" };
+
+        if (!allowedTypes.Contains(contentType))
+        {
+            return null;
+        }
+
+        if (sizeInMb > 10)
+        {
+            return null;
+        }
+        
         await using var stream = file.OpenReadStream();
+        
         var uploadParams = new ImageUploadParams
         {
             File = new FileDescription(file.FileName, stream),
