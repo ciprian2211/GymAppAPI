@@ -104,14 +104,15 @@ public class ExerciseService : IExerciseService
         };
     } 
 
-    public async Task<List<ExerciseDto>> AllExercisesAsync(int pageSize,int pageNumber,
+    public async Task<List<ExerciseDto>> AllExercisesAsync(int pageSize, int pageNumber,
         CancellationToken ct = default)
     {
         if (pageSize <= 0) return new List<ExerciseDto>();
-        
+        var safePageNumber = Math.Max(1, pageNumber);
+
         var result = await _dbContext.Exercises
             .AsNoTracking()
-            .Skip((pageNumber-1)*pageSize)
+            .Skip((safePageNumber - 1) * pageSize)
             .Take(pageSize)
             .Select(e => new ExerciseDto
             {

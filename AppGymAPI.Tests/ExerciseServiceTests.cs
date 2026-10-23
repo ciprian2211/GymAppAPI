@@ -371,6 +371,22 @@ public class ExerciseServiceTests : IDisposable
 
     #region AllExercisesAsync Tests
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public async Task AllExercisesAsync_WhenPageNumberIsZeroOrNegative_DefaultsToPageOne(int invalidPageNumber)
+    {
+        var exercise = CreateTestExercise(name: "Bench Press");
+        await _dbContext.Exercises.AddAsync(exercise);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        var result = await _exerciseService.AllExercisesAsync(pageSize: 10, pageNumber: invalidPageNumber);
+
+        result.Should().HaveCount(1);
+        result[0].Name.Should().Be("Bench Press");
+    }
+
     [Fact]
     public async Task AllExercisesAsync_WhenPageSizeIsZero_ReturnsEmptyList()
     {
