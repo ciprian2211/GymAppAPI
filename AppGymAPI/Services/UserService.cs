@@ -43,6 +43,7 @@ public class UserService : IUserService
             .Where(u => u.Name.Contains(name))
             .Select(u => new UserListDto
             {
+                Id = u.Id,
                 Name = u.Name,
                 Surname = u.Surname,
                 Email = u.Email ?? string.Empty,
@@ -58,6 +59,7 @@ public class UserService : IUserService
             .Where(u => u.Role == role)
             .Select(u => new UserListDto
             {
+                Id = u.Id,
                 Name = u.Name,
                 Surname = u.Surname,
                 Email = u.Email ?? string.Empty,

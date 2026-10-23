@@ -157,6 +157,7 @@ public class UserServiceTests : IDisposable
 
         results.Should().ContainEquivalentOf(new UserListDto
         {
+            Id = user1.Id,
             Name = "John Doe",
             Surname = "One",
             Email = "john1@example.com",
@@ -165,6 +166,7 @@ public class UserServiceTests : IDisposable
 
         results.Should().ContainEquivalentOf(new UserListDto
         {
+            Id = user2.Id,
             Name = "Johnny Test",
             Surname = "Two",
             Email = "johnny@example.com",
@@ -222,6 +224,7 @@ public class UserServiceTests : IDisposable
         results.Should().NotBeNull();
         results.Should().HaveCount(2);
         results.Select(r => r.Name).Should().BeEquivalentTo(new[] { "Admin One", "Admin Two" });
+        results.Select(r => r.Id).Should().BeEquivalentTo(new[] { admin1.Id, admin2.Id });
 
         // Boundary Assertion: AsNoTracking must not track entities
         _dbContext.ChangeTracker.Entries().Should().BeEmpty();
