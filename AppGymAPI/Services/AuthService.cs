@@ -59,8 +59,10 @@ public class AuthService : IAuthService
         };
     }
 
-    public async Task<bool> RegisterUserAsync(RegisterUserDto dto)
+    public async Task<RegisterResultDto> RegisterUserAsync(RegisterUserDto dto, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         string? imageUrl = string.Empty;
         if (dto.ProfileImage != null && dto.ProfileImage.Length > 0)
         {
@@ -91,14 +93,20 @@ public class AuthService : IAuthService
         if (result.Succeeded)
         {
             _logger.LogInformation("User {Email} registered successfully", dto.Email);
-            return true;
+            return new RegisterResultDto { Succeeded = true };
         }
 
+        var errors = new List<string>();
         foreach (var error in result.Errors)
         {
             _logger.LogError("Registration error for {Email}: {Code} - {Description}", dto.Email, error.Code, error.Description);
+            errors.Add(error.Description);
         }
-        return false;
+        return new RegisterResultDto
+        {
+            Succeeded = false,
+            Errors = errors
+        };
     }
 
     public async Task<AuthResponseDto?> RefreshTokenAsync(RefreshTokenRequestDto dto)
