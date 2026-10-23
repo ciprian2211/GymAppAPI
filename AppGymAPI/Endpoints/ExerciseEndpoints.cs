@@ -19,7 +19,7 @@ public static class ExerciseEndpoints
         group.MapDelete("delete/{id:guid}", DeleteExerciseAsync);
     }
 
-    private static async Task<IResult> PostExerciseAsync(ExerciseAddDTO request,
+    private static async Task<IResult> PostExerciseAsync(ExerciseAddDto request,
         IExerciseService exerciseService,
         CancellationToken ct = default)
     {
@@ -69,7 +69,7 @@ public static class ExerciseEndpoints
         return result is null ? Results.NotFound() : Results.Ok(result);
     }
 
-    private static async Task<IResult> PutExerciseAsync(Guid id, ExerciseAddDTO request,
+    private static async Task<IResult> PutExerciseAsync(Guid id, ExerciseAddDto request,
         IExerciseService exerciseService, CancellationToken ct = default)
     {
         var result = await exerciseService.EditExerciseAsync(id, request, ct);

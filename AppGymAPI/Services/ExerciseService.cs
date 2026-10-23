@@ -18,7 +18,7 @@ public class ExerciseService : IExerciseService
         _photoService = photoService;
     }
 
-    public async Task<ExerciseDTO?> AddExerciseAsync(ExerciseAddDTO dto, CancellationToken ct = default)
+    public async Task<ExerciseDto?> AddExerciseAsync(ExerciseAddDto dto, CancellationToken ct = default)
     {
         
         var newExercise = new Exercise
@@ -46,7 +46,7 @@ public class ExerciseService : IExerciseService
         _dbContext.Exercises.Add(newExercise);
         await _dbContext.SaveChangesAsync(ct);
 
-        return new ExerciseDTO
+        return new ExerciseDto
         {
             Id = newExercise.Id,
             Name = newExercise.Name,
@@ -70,7 +70,7 @@ public class ExerciseService : IExerciseService
         return true;
     }
 
-    public async Task<ExerciseDTO?> SearchExerciseByNameAsync(string name, CancellationToken ct = default)
+    public async Task<ExerciseDto?> SearchExerciseByNameAsync(string name, CancellationToken ct = default)
     {
         var result = await _dbContext.Exercises
             .AsNoTracking()
@@ -78,7 +78,7 @@ public class ExerciseService : IExerciseService
         
         if (result is null) return null;
 
-        return new ExerciseDTO
+        return new ExerciseDto
         {
             Name = result.Name,
             Description = result.Description,
@@ -87,16 +87,16 @@ public class ExerciseService : IExerciseService
         };
     } 
 
-    public async Task<List<ExerciseDTO>> AllExercisesAsync(int pageSize,int pageNumber,
+    public async Task<List<ExerciseDto>> AllExercisesAsync(int pageSize,int pageNumber,
         CancellationToken ct = default)
     {
-        if (pageSize <= 0) return new List<ExerciseDTO>();
+        if (pageSize <= 0) return new List<ExerciseDto>();
         
         var result = await _dbContext.Exercises
             .AsNoTracking()
             .Skip((pageNumber-1)*pageSize)
             .Take(pageSize)
-            .Select(e => new ExerciseDTO
+            .Select(e => new ExerciseDto
             {
                 Name = e.Name,
                 Description = e.Description,
@@ -108,13 +108,13 @@ public class ExerciseService : IExerciseService
         return result;
     }
 
-    public async Task<List<ExerciseDTO>> SearchExercisesByCategoryAsync(ExerciseType category,
+    public async Task<List<ExerciseDto>> SearchExercisesByCategoryAsync(ExerciseType category,
         CancellationToken ct = default)
     {
         var result = await _dbContext.Exercises
             .AsNoTracking()
             .Where(e => e.Category == category)
-            .Select(e => new ExerciseDTO
+            .Select(e => new ExerciseDto
             {
                 Name = e.Name,
                 Description = e.Description,
@@ -126,13 +126,13 @@ public class ExerciseService : IExerciseService
         return result;
     }//refactor mai tz sa specific si nr exercitii
 
-    public async Task<List<ExerciseDTO>> SearchExercisesByTargetedMuscleAsync(TargetedMuscle targetedMuscle,
+    public async Task<List<ExerciseDto>> SearchExercisesByTargetedMuscleAsync(TargetedMuscle targetedMuscle,
         CancellationToken ct = default)
     {
         var result = await _dbContext.Exercises
             .AsNoTracking()
             .Where(e => e.TargetedMuscle == targetedMuscle)
-            .Select(e => new ExerciseDTO
+            .Select(e => new ExerciseDto
             {
                 Name = e.Name,
                 Description = e.Description,
@@ -144,7 +144,7 @@ public class ExerciseService : IExerciseService
         return result;
     }//si aici tot
 
-    public async Task<ExerciseDTO?> EditExerciseAsync(Guid id, ExerciseAddDTO dto, CancellationToken ct = default)
+    public async Task<ExerciseDto?> EditExerciseAsync(Guid id, ExerciseAddDto dto, CancellationToken ct = default)
     {
         var exercise = await _dbContext.Exercises
             .FirstOrDefaultAsync(e => e.Id == id, ct);
@@ -195,7 +195,7 @@ public class ExerciseService : IExerciseService
             throw;
         }
 
-        return new ExerciseDTO
+        return new ExerciseDto
         {
             Name = exercise.Name,
             Description = exercise.Description,
@@ -204,7 +204,7 @@ public class ExerciseService : IExerciseService
         };
     }
 
-    public async Task<ExerciseDTO?> SearchExerciseByIdAsync(Guid id, CancellationToken ct = default)
+    public async Task<ExerciseDto?> SearchExerciseByIdAsync(Guid id, CancellationToken ct = default)
     {
         var result = await _dbContext.Exercises
             .AsNoTracking()
@@ -212,7 +212,7 @@ public class ExerciseService : IExerciseService
         
         if (result is null) return null;
 
-        return new ExerciseDTO
+        return new ExerciseDto
         {
             Id = result.Id,
             Name = result.Name,

@@ -155,7 +155,7 @@ public class UserServiceTests : IDisposable
         results.Should().NotBeNull();
         results.Should().HaveCount(2);
 
-        results.Should().ContainEquivalentOf(new UserListDTO
+        results.Should().ContainEquivalentOf(new UserListDto
         {
             Name = "John Doe",
             Surname = "One",
@@ -163,7 +163,7 @@ public class UserServiceTests : IDisposable
             ReviewStars = 4.5f
         });
 
-        results.Should().ContainEquivalentOf(new UserListDTO
+        results.Should().ContainEquivalentOf(new UserListDto
         {
             Name = "Johnny Test",
             Surname = "Two",
@@ -257,7 +257,7 @@ public class UserServiceTests : IDisposable
     {
         // Arrange: Empty DB
         var nonExistentId = Guid.NewGuid();
-        var editDto = new UserEditDTO
+        var editDto = new UserEditDto
         {
             Id = nonExistentId,
             Name = "NonExistent",
@@ -287,7 +287,7 @@ public class UserServiceTests : IDisposable
         await _dbContext.SaveChangesAsync();
         _dbContext.ChangeTracker.Clear();
 
-        var editDto = new UserEditDTO
+        var editDto = new UserEditDto
         {
             Id = user.Id,
             Name = "UpdatedFirstName",
@@ -327,7 +327,7 @@ public class UserServiceTests : IDisposable
         _dbContext.ChangeTracker.Clear();
 
         var dummyImage = CreateDummyFormFile("avatar.jpg");
-        var editDto = new UserEditDTO
+        var editDto = new UserEditDto
         {
             Id = user.Id,
             Name = "JohnUpdated",
@@ -373,7 +373,7 @@ public class UserServiceTests : IDisposable
         _dbContext.ChangeTracker.Clear();
 
         var dummyImage = CreateDummyFormFile("new_avatar.jpg");
-        var editDto = new UserEditDTO
+        var editDto = new UserEditDto
         {
             Id = user.Id,
             Name = "JohnWithNewPhoto",
@@ -420,7 +420,7 @@ public class UserServiceTests : IDisposable
         _dbContext.ChangeTracker.Clear();
 
         var dummyImage = CreateDummyFormFile("new_avatar.jpg");
-        var editDto = new UserEditDTO
+        var editDto = new UserEditDto
         {
             Id = user.Id,
             Name = "John",
@@ -460,7 +460,7 @@ public class UserServiceTests : IDisposable
         await _dbContext.SaveChangesAsync();
         _dbContext.ChangeTracker.Clear();
 
-        var editDto = new UserEditDTO
+        var editDto = new UserEditDto
         {
             Id = user.Id,
             Name = "ConflictName",
@@ -485,7 +485,7 @@ public class UserServiceTests : IDisposable
         await _dbContext.SaveChangesAsync();
         _dbContext.ChangeTracker.Clear();
 
-        var editDto = new UserEditDTO
+        var editDto = new UserEditDto
         {
             Id = user1.Id,
             Name = "Updated User One",
@@ -527,7 +527,7 @@ public class UserServiceTests : IDisposable
         _dbContext.ChangeTracker.Clear();
 
         // DTO contains otherUser's Id, but we are editing targetUser via id parameter
-        var editDto = new UserEditDTO
+        var editDto = new UserEditDto
         {
             Id = otherUser.Id,
             Name = "Updated Target",
@@ -566,7 +566,7 @@ public class UserServiceTests : IDisposable
         _dbContext.ChangeTracker.Clear();
 
         var nonExistentId = Guid.NewGuid();
-        var editDto = new UserEditDTO
+        var editDto = new UserEditDto
         {
             Id = existingUser.Id,
             Name = "Should Not Be Applied",
@@ -595,7 +595,7 @@ public class UserServiceTests : IDisposable
         await _dbContext.SaveChangesAsync();
         _dbContext.ChangeTracker.Clear();
 
-        var editDto = new UserEditDTO
+        var editDto = new UserEditDto
         {
             Id = user.Id,
             Name = "New Name"
@@ -689,7 +689,7 @@ public class UserServiceTests : IDisposable
         await FluentActions.Invoking(() => _userService.SearchUsersByRoleAsync(Role.User, cts.Token))
             .Should().ThrowAsync<OperationCanceledException>();
 
-        await FluentActions.Invoking(() => _userService.EditUserAsync(Guid.NewGuid(), new UserEditDTO { Id = Guid.NewGuid() }, cts.Token))
+        await FluentActions.Invoking(() => _userService.EditUserAsync(Guid.NewGuid(), new UserEditDto { Id = Guid.NewGuid() }, cts.Token))
             .Should().ThrowAsync<OperationCanceledException>();
 
         await FluentActions.Invoking(() => _userService.DeleteUserByIdAsync(Guid.NewGuid(), cts.Token))

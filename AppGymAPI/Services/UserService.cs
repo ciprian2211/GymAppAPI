@@ -18,7 +18,7 @@ public class UserService : IUserService
         _logger = logger;
     }
 
-    public async Task<UserDTO?> SearchUserByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<UserDto?> SearchUserByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var user = await _appDbContext.Users
             .AsNoTracking()
@@ -26,7 +26,7 @@ public class UserService : IUserService
             
         if (user is null) return null;
 
-        return new UserDTO
+        return new UserDto
         {
             Id = user.Id,
             Name = user.Name,
@@ -36,12 +36,12 @@ public class UserService : IUserService
         };
     }
 
-    public async Task<List<UserListDTO>> SearchUsersByNameAsync(string name, CancellationToken cancellationToken = default)
+    public async Task<List<UserListDto>> SearchUsersByNameAsync(string name, CancellationToken cancellationToken = default)
     {
         return await _appDbContext.Users
             .AsNoTracking()
             .Where(u => u.Name.Contains(name))
-            .Select(u => new UserListDTO
+            .Select(u => new UserListDto
             {
                 Name = u.Name,
                 Surname = u.Surname,
@@ -51,12 +51,12 @@ public class UserService : IUserService
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<List<UserListDTO>> SearchUsersByRoleAsync(Role role, CancellationToken cancellationToken = default)
+    public async Task<List<UserListDto>> SearchUsersByRoleAsync(Role role, CancellationToken cancellationToken = default)
     {
         return await _appDbContext.Users
             .AsNoTracking()
             .Where(u => u.Role == role)
-            .Select(u => new UserListDTO
+            .Select(u => new UserListDto
             {
                 Name = u.Name,
                 Surname = u.Surname,
@@ -66,7 +66,7 @@ public class UserService : IUserService
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<UserEditDTO?> EditUserAsync(Guid id,UserEditDTO dto, CancellationToken cancellationToken = default)
+    public async Task<UserEditDto?> EditUserAsync(Guid id,UserEditDto dto, CancellationToken cancellationToken = default)
     {
         var user = await _appDbContext.Users
             .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);

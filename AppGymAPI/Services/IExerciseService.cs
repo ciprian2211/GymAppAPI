@@ -5,22 +5,22 @@ namespace AppGymAPI.Services;
 
 public interface IExerciseService
 {
-    Task<ExerciseDTO?> AddExerciseAsync(ExerciseAddDTO dto, CancellationToken ct = default);
+    Task<ExerciseDto?> AddExerciseAsync(ExerciseAddDto dto, CancellationToken ct = default);
     
     Task<bool> DeleteExerciseAsync(Guid id, CancellationToken ct = default);
     
-    Task<ExerciseDTO?> SearchExerciseByNameAsync(string name, CancellationToken ct = default);
+    Task<ExerciseDto?> SearchExerciseByNameAsync(string name, CancellationToken ct = default);
 
-    Task<List<ExerciseDTO>> AllExercisesAsync(int pageSize,int pageNumber,
+    Task<List<ExerciseDto>> AllExercisesAsync(int pageSize,int pageNumber,
         CancellationToken ct = default);
 
-    Task<List<ExerciseDTO>> SearchExercisesByCategoryAsync(ExerciseType category, CancellationToken ct = default);
+    Task<List<ExerciseDto>> SearchExercisesByCategoryAsync(ExerciseType category, CancellationToken ct = default);
 
-    Task<List<ExerciseDTO>> SearchExercisesByTargetedMuscleAsync(TargetedMuscle targetedMuscle,
+    Task<List<ExerciseDto>> SearchExercisesByTargetedMuscleAsync(TargetedMuscle targetedMuscle,
         CancellationToken ct = default);
 
-    Task<ExerciseDTO?> EditExerciseAsync(Guid id, ExerciseAddDTO dto,
+    Task<ExerciseDto?> EditExerciseAsync(Guid id, ExerciseAddDto dto,
         CancellationToken ct = default);
     
-    Task<ExerciseDTO?> SearchExerciseByIdAsync(Guid id, CancellationToken ct = default);
+    Task<ExerciseDto?> SearchExerciseByIdAsync(Guid id, CancellationToken ct = default);
 }

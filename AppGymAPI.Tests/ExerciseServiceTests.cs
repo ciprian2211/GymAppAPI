@@ -94,7 +94,7 @@ public class ExerciseServiceTests : IDisposable
     public async Task AddExerciseAsync_WhenGifIsNull_AddsExerciseAndReturnsDto()
     {
         // Arrange
-        var dto = new ExerciseAddDTO
+        var dto = new ExerciseAddDto
         {
             Name = "Push Up",
             Description = "Basic bodyweight chest movement",
@@ -127,7 +127,7 @@ public class ExerciseServiceTests : IDisposable
     {
         // Arrange
         var emptyFile = CreateDummyFormFile(content: Array.Empty<byte>());
-        var dto = new ExerciseAddDTO
+        var dto = new ExerciseAddDto
         {
             Name = "Bodyweight Squat",
             Description = "Lower body exercise",
@@ -151,7 +151,7 @@ public class ExerciseServiceTests : IDisposable
     {
         // Arrange
         var file = CreateDummyFormFile();
-        var dto = new ExerciseAddDTO
+        var dto = new ExerciseAddDto
         {
             Name = "Pull Up",
             Description = "Upper body back exercise",
@@ -187,7 +187,7 @@ public class ExerciseServiceTests : IDisposable
     {
         // Arrange
         var file = CreateDummyFormFile();
-        var dto = new ExerciseAddDTO
+        var dto = new ExerciseAddDto
         {
             Name = "Deadlift",
             Description = "Compound posterior chain exercise",
@@ -214,7 +214,7 @@ public class ExerciseServiceTests : IDisposable
     {
         // Arrange
         var file = CreateDummyFormFile();
-        var dto = new ExerciseAddDTO
+        var dto = new ExerciseAddDto
         {
             Name = "Overhead Press",
             Description = "Shoulder press exercise",
@@ -472,7 +472,7 @@ public class ExerciseServiceTests : IDisposable
     {
         // Arrange
         var nonExistentId = Guid.NewGuid();
-        var dto = new ExerciseAddDTO
+        var dto = new ExerciseAddDto
         {
             Name = "Any Name",
             Description = "Any Description",
@@ -502,7 +502,7 @@ public class ExerciseServiceTests : IDisposable
         await _dbContext.SaveChangesAsync();
         _dbContext.ChangeTracker.Clear();
 
-        var editDto = new ExerciseAddDTO
+        var editDto = new ExerciseAddDto
         {
             Name = "New Name",
             Description = "New Desc",
@@ -541,7 +541,7 @@ public class ExerciseServiceTests : IDisposable
         _dbContext.ChangeTracker.Clear();
 
         var file = CreateDummyFormFile();
-        var editDto = new ExerciseAddDTO
+        var editDto = new ExerciseAddDto
         {
             Name = "Updated Name",
             Description = "Updated Desc",
@@ -576,7 +576,7 @@ public class ExerciseServiceTests : IDisposable
         _dbContext.ChangeTracker.Clear();
 
         var file = CreateDummyFormFile();
-        var editDto = new ExerciseAddDTO
+        var editDto = new ExerciseAddDto
         {
             Name = "Updated Exercise",
             Description = "Updated Description",
@@ -612,7 +612,7 @@ public class ExerciseServiceTests : IDisposable
         _dbContext.ChangeTracker.Clear();
 
         var file = CreateDummyFormFile();
-        var editDto = new ExerciseAddDTO
+        var editDto = new ExerciseAddDto
         {
             Name = "Exercise Name",
             Description = "Exercise Description",
@@ -659,7 +659,7 @@ public class ExerciseServiceTests : IDisposable
         await _dbContext.SaveChangesAsync();
         _dbContext.ChangeTracker.Clear();
 
-        var editDto = new ExerciseAddDTO
+        var editDto = new ExerciseAddDto
         {
             Name = "Updated First Exercise",
             Description = "Updated Desc",
@@ -691,7 +691,7 @@ public class ExerciseServiceTests : IDisposable
         await _dbContext.SaveChangesAsync();
         _dbContext.ChangeTracker.Clear();
 
-        var editDto = new ExerciseAddDTO
+        var editDto = new ExerciseAddDto
         {
             Name = "Conflict Exercise",
             Description = "Desc",
@@ -726,7 +726,7 @@ public class ExerciseServiceTests : IDisposable
         using var cts = new CancellationTokenSource();
         cts.Cancel();
 
-        var dummyDto = new ExerciseAddDTO
+        var dummyDto = new ExerciseAddDto
         {
             Name = "Name",
             Description = "Description",

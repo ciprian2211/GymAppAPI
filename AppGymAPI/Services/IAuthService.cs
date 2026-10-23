@@ -5,8 +5,8 @@ namespace AppGymAPI.Services;
 
 public interface IAuthService
 {
-    Task<AuthResponseDTO?> LoginUserAsync(LoginUserDTO dto);
-    Task<bool> RegisterUserAsync(RegisterUserDTO dto);
-    Task<AuthResponseDTO?> RefreshTokenAsync(RefreshTokenRequestDTO dto);
+    Task<AuthResponseDto?> LoginUserAsync(LoginUserDto dto);
+    Task<bool> RegisterUserAsync(RegisterUserDto dto);
+    Task<AuthResponseDto?> RefreshTokenAsync(RefreshTokenRequestDto dto);
 
 }

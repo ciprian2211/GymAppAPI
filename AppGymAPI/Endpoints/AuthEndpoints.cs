@@ -13,7 +13,7 @@ public static class AuthEndpoints
         group.MapPost("refresh-token", RefreshToken);
     }
 
-    private static async Task<IResult> RegisterUser(IAuthService authService,RegisterUserDTO request)
+    private static async Task<IResult> RegisterUser(IAuthService authService,RegisterUserDto request)
     {
         var result = await authService.RegisterUserAsync(request);
         if (!result)
@@ -24,7 +24,7 @@ public static class AuthEndpoints
         return Results.Created();
     }
 
-    private static async Task<IResult> LoginUser(IAuthService authService, LoginUserDTO request)
+    private static async Task<IResult> LoginUser(IAuthService authService, LoginUserDto request)
     {
         var result = await authService.LoginUserAsync(request);
         if (result is null)
@@ -35,7 +35,7 @@ public static class AuthEndpoints
         return Results.Ok(result);
     }
 
-    private static async Task<IResult> RefreshToken(IAuthService authService, RefreshTokenRequestDTO request)
+    private static async Task<IResult> RefreshToken(IAuthService authService, RefreshTokenRequestDto request)
     {
         var result = await authService.RefreshTokenAsync(request);
         if (result is null)

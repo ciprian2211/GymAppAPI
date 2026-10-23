@@ -40,7 +40,7 @@ public class AuthServiceTests
     [Fact]
     public async Task LoginUserAsync_WithValidCredentials_ReturnsAuthResponseDTO()
     {
-        var loginUserDto = new LoginUserDTO
+        var loginUserDto = new LoginUserDto
         {
             Email = "test@gmail.com",
             Password = "Password123!"
@@ -67,7 +67,7 @@ public class AuthServiceTests
     [Fact]
     public async Task LoginUserAsync_WithInvalidEmail_ReturnsNull()
     {
-        var loginDto = new LoginUserDTO
+        var loginDto = new LoginUserDto
         {
             Email = "salut123",
             Password = "123Boss!"
@@ -83,7 +83,7 @@ public class AuthServiceTests
     [Fact]
     public async Task LoginUserAsync_WithInvalidPassword_ReturnsNull()
     {
-        var loginDto = new LoginUserDTO
+        var loginDto = new LoginUserDto
         {
             Email = "test@gmail.com",
             Password = "123Boss!"
@@ -111,7 +111,7 @@ public class AuthServiceTests
     [Fact]
     public async Task RegisterUserAsync_WithValidUserDetails_ReturnsTrue()
     {
-        var registerDto = new RegisterUserDTO
+        var registerDto = new RegisterUserDto
         {
             Name = "Valid name",
             Surname = "Valid surname",
@@ -131,7 +131,7 @@ public class AuthServiceTests
     [Fact]
     public async Task RegisterUserAsync_WhenEmailAlreadyExists_ReturnsFalse()
     {
-        var registerDto = new RegisterUserDTO
+        var registerDto = new RegisterUserDto
         {
             Name = "Valid name",
             Surname = "Valid surname",
@@ -169,10 +169,10 @@ public class AuthServiceTests
             .ReturnsAsync(true);
 
         var loginResult = await _authService
-            .LoginUserAsync(new LoginUserDTO{Email = email,Password = "password"});
+            .LoginUserAsync(new LoginUserDto{Email = email,Password = "password"});
         var validJwtToken = loginResult.Token;
 
-        var refreshDto = new RefreshTokenRequestDTO
+        var refreshDto = new RefreshTokenRequestDto
         {
             Token = validJwtToken,
             RefreshToken = loginResult.RefreshToken
@@ -204,10 +204,10 @@ public class AuthServiceTests
             .ReturnsAsync(true);
 
         var loginResult = await _authService
-            .LoginUserAsync(new LoginUserDTO{Email = email,Password = "password"});
+            .LoginUserAsync(new LoginUserDto{Email = email,Password = "password"});
         var validJwtToken = loginResult.Token;
 
-        var refreshDto = new RefreshTokenRequestDTO
+        var refreshDto = new RefreshTokenRequestDto
         {
             Token = validJwtToken,
             RefreshToken = loginResult.RefreshToken
@@ -240,10 +240,10 @@ public class AuthServiceTests
             .ReturnsAsync(true);
 
         var loginResult = await _authService
-            .LoginUserAsync(new LoginUserDTO{Email = email,Password = "password"});
+            .LoginUserAsync(new LoginUserDto{Email = email,Password = "password"});
         var validJwtToken = loginResult.Token;
 
-        var refreshDto = new RefreshTokenRequestDTO
+        var refreshDto = new RefreshTokenRequestDto
         {
             Token = validJwtToken,
             RefreshToken = "InvalidToken123"
@@ -273,10 +273,10 @@ public class AuthServiceTests
             .ReturnsAsync(true);
 
         var loginResult = await _authService
-            .LoginUserAsync(new LoginUserDTO{Email = email,Password = "password"});
+            .LoginUserAsync(new LoginUserDto{Email = email,Password = "password"});
         var validJwtToken = loginResult.Token;
         
-        var refreshDto = new RefreshTokenRequestDTO
+        var refreshDto = new RefreshTokenRequestDto
         {
             Token = validJwtToken,
             RefreshToken = loginResult.RefreshToken

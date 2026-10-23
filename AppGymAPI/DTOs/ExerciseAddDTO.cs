@@ -3,7 +3,7 @@ using AppGymAPI.Models;
 
 namespace AppGymAPI.DTOs;
 
-public class ExerciseAddDTO
+public class ExerciseAddDto
 {
     [Required]
     [StringLength(maximumLength:60,MinimumLength = 8,ErrorMessage = "Name length should not be greater than {1} or less than {2}")]

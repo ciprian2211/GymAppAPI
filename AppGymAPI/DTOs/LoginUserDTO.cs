@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace AppGymAPI.DTOs;
 
-public class LoginUserDTO
+public class LoginUserDto
 {
     [Required]
     [EmailAddress(ErrorMessage = "Must be a valid email.")]

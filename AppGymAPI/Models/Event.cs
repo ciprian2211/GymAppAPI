@@ -12,7 +12,7 @@ public class Event
     public string Name { get; set; } = string.Empty;
     
     public AccessType AccessType { get; set; } = AccessType.Private;
-
+    
     public string Password { get; set; } = string.Empty;
 
     public string Description { get; set; } = string.Empty;

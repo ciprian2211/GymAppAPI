@@ -3,7 +3,7 @@ using AppGymAPI.Models;
 
 namespace AppGymAPI.DTOs;
 
-public class ExerciseDTO
+public class ExerciseDto
 {
     public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
