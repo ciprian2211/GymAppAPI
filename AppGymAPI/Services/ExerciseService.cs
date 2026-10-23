@@ -77,9 +77,17 @@ public class ExerciseService : IExerciseService
         }
         
         _dbContext.Exercises.Remove(result);
-        await _dbContext.SaveChangesAsync(ct);
 
-        return true;
+        try
+        {
+            await _dbContext.SaveChangesAsync(ct);
+            return true;
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogWarning(ex, "Failed to delete exercise {ExerciseId} due to database update constraint or conflict", id);
+            return false;
+        }
     }
 
     public async Task<ExerciseDto?> SearchExerciseByNameAsync(string name, CancellationToken ct = default)

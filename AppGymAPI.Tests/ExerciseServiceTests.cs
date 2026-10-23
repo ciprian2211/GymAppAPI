@@ -327,6 +327,21 @@ public class ExerciseServiceTests : IDisposable
         inDb.Should().BeNull();
     }
 
+    [Fact]
+    public async Task DeleteExerciseAsync_WhenDbUpdateExceptionOccurs_ReturnsFalse()
+    {
+        var exercise = CreateTestExercise(name: "Squat");
+        await _dbContext.Exercises.AddAsync(exercise);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        _concurrencyInterceptor.ThrowDbUpdateException = true;
+
+        var result = await _exerciseService.DeleteExerciseAsync(exercise.Id);
+
+        result.Should().BeFalse();
+    }
+
     #endregion
 
     #region SearchExerciseByNameAsync Tests
@@ -846,12 +861,18 @@ public class ExerciseServiceTests : IDisposable
     private sealed class ConcurrencyExceptionInterceptor : SaveChangesInterceptor
     {
         public bool ThrowOnSaving { get; set; }
+        public bool ThrowDbUpdateException { get; set; }
 
         public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
             DbContextEventData eventData,
             InterceptionResult<int> result,
             CancellationToken cancellationToken = default)
         {
+            if (ThrowDbUpdateException)
+            {
+                throw new DbUpdateException("Simulated foreign key constraint violation.");
+            }
+
             if (ThrowOnSaving)
             {
                 throw new DbUpdateConcurrencyException("Simulated concurrency conflict during SaveChangesAsync.");
@@ -864,6 +885,11 @@ public class ExerciseServiceTests : IDisposable
             DbContextEventData eventData,
             InterceptionResult<int> result)
         {
+            if (ThrowDbUpdateException)
+            {
+                throw new DbUpdateException("Simulated foreign key constraint violation.");
+            }
+
             if (ThrowOnSaving)
             {
                 throw new DbUpdateConcurrencyException("Simulated concurrency conflict during SaveChanges.");
