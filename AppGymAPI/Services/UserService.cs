@@ -36,11 +36,19 @@ public class UserService : IUserService
         };
     }
 
-    public async Task<List<UserListDto>> SearchUsersByNameAsync(string name, CancellationToken cancellationToken = default)
+    public async Task<List<UserListDto>> SearchUsersByNameAsync(string name, int pageSize = 10, int pageNumber = 1,
+        CancellationToken cancellationToken = default)
     {
+        if (pageSize <= 0) return new List<UserListDto>();
+
+        var safePageNumber = Math.Max(1, pageNumber);
+        
         return await _appDbContext.Users
             .AsNoTracking()
             .Where(u => u.Name.Contains(name))
+            .OrderBy(u => u.Id)
+            .Skip((safePageNumber - 1) * pageSize)
+            .Take(pageSize)
             .Select(u => new UserListDto
             {
                 Id = u.Id,
@@ -52,11 +60,19 @@ public class UserService : IUserService
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<List<UserListDto>> SearchUsersByRoleAsync(Role role, CancellationToken cancellationToken = default)
+    public async Task<List<UserListDto>> SearchUsersByRoleAsync(Role role, int pageSize = 10, int pageNumber = 1,
+        CancellationToken cancellationToken = default)
     {
+        if (pageSize <= 0) return new List<UserListDto>();
+
+        var safePageNumber = Math.Max(1, pageNumber);
+        
         return await _appDbContext.Users
             .AsNoTracking()
             .Where(u => u.Role == role)
+            .OrderBy(u => u.Id)
+            .Skip((safePageNumber - 1) * pageSize)
+            .Take(pageSize)
             .Select(u => new UserListDto
             {
                 Id = u.Id,

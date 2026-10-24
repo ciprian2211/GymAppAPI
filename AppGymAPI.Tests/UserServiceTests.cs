@@ -149,7 +149,7 @@ public class UserServiceTests : IDisposable
         _dbContext.ChangeTracker.Clear();
 
         // Act
-        var results = await _userService.SearchUsersByNameAsync("John", CancellationToken.None);
+        var results = await _userService.SearchUsersByNameAsync("John", pageSize: 10, pageNumber: 1, cancellationToken: CancellationToken.None);
 
         // Assert
         results.Should().NotBeNull();
@@ -188,7 +188,7 @@ public class UserServiceTests : IDisposable
         _dbContext.ChangeTracker.Clear();
 
         // Act
-        var results = await _userService.SearchUsersByNameAsync("Zack", CancellationToken.None);
+        var results = await _userService.SearchUsersByNameAsync("Zack", pageSize: 10, pageNumber: 1, cancellationToken: CancellationToken.None);
 
         // Assert
         results.Should().NotBeNull();
@@ -196,6 +196,38 @@ public class UserServiceTests : IDisposable
 
         // Boundary Assertion: AsNoTracking must not track entities
         _dbContext.ChangeTracker.Entries().Should().BeEmpty();
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public async Task SearchUsersByNameAsync_WhenPageSizeIsZeroOrNegative_ReturnsEmptyList(int invalidPageSize)
+    {
+        var user = CreateTestUser(name: "John");
+        await _dbContext.Users.AddAsync(user);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        var results = await _userService.SearchUsersByNameAsync("John", invalidPageSize, 1, CancellationToken.None);
+
+        results.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task SearchUsersByNameAsync_WithPagination_ReturnsCorrectPagedSlice()
+    {
+        var user1 = CreateTestUser(name: "John A");
+        var user2 = CreateTestUser(name: "John B");
+        var user3 = CreateTestUser(name: "John C");
+        await _dbContext.Users.AddRangeAsync(user1, user2, user3);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        var page1 = await _userService.SearchUsersByNameAsync("John", pageSize: 2, pageNumber: 1, CancellationToken.None);
+        var page2 = await _userService.SearchUsersByNameAsync("John", pageSize: 2, pageNumber: 2, CancellationToken.None);
+
+        page1.Should().HaveCount(2);
+        page2.Should().HaveCount(1);
     }
 
     #endregion
@@ -218,7 +250,7 @@ public class UserServiceTests : IDisposable
         _dbContext.ChangeTracker.Clear();
 
         // Act
-        var results = await _userService.SearchUsersByRoleAsync(Role.Admin, CancellationToken.None);
+        var results = await _userService.SearchUsersByRoleAsync(Role.Admin, pageSize: 10, pageNumber: 1, cancellationToken: CancellationToken.None);
 
         // Assert
         results.Should().NotBeNull();
@@ -241,7 +273,7 @@ public class UserServiceTests : IDisposable
         _dbContext.ChangeTracker.Clear();
 
         // Act: Search for Trainer
-        var results = await _userService.SearchUsersByRoleAsync(Role.Trainer, CancellationToken.None);
+        var results = await _userService.SearchUsersByRoleAsync(Role.Trainer, pageSize: 10, pageNumber: 1, cancellationToken: CancellationToken.None);
 
         // Assert
         results.Should().NotBeNull();
@@ -249,6 +281,38 @@ public class UserServiceTests : IDisposable
 
         // Boundary Assertion: AsNoTracking must not track entities
         _dbContext.ChangeTracker.Entries().Should().BeEmpty();
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public async Task SearchUsersByRoleAsync_WhenPageSizeIsZeroOrNegative_ReturnsEmptyList(int invalidPageSize)
+    {
+        var user = CreateTestUser(role: Role.User);
+        await _dbContext.Users.AddAsync(user);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        var results = await _userService.SearchUsersByRoleAsync(Role.User, invalidPageSize, 1, CancellationToken.None);
+
+        results.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task SearchUsersByRoleAsync_WithPagination_ReturnsCorrectPagedSlice()
+    {
+        var user1 = CreateTestUser(name: "User A", role: Role.User);
+        var user2 = CreateTestUser(name: "User B", role: Role.User);
+        var user3 = CreateTestUser(name: "User C", role: Role.User);
+        await _dbContext.Users.AddRangeAsync(user1, user2, user3);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        var page1 = await _userService.SearchUsersByRoleAsync(Role.User, pageSize: 2, pageNumber: 1, CancellationToken.None);
+        var page2 = await _userService.SearchUsersByRoleAsync(Role.User, pageSize: 2, pageNumber: 2, CancellationToken.None);
+
+        page1.Should().HaveCount(2);
+        page2.Should().HaveCount(1);
     }
 
     #endregion
@@ -709,10 +773,10 @@ public class UserServiceTests : IDisposable
         await FluentActions.Invoking(() => _userService.SearchUserByIdAsync(Guid.NewGuid(), cts.Token))
             .Should().ThrowAsync<OperationCanceledException>();
 
-        await FluentActions.Invoking(() => _userService.SearchUsersByNameAsync("John", cts.Token))
+        await FluentActions.Invoking(() => _userService.SearchUsersByNameAsync("John", 10, 1, cts.Token))
             .Should().ThrowAsync<OperationCanceledException>();
 
-        await FluentActions.Invoking(() => _userService.SearchUsersByRoleAsync(Role.User, cts.Token))
+        await FluentActions.Invoking(() => _userService.SearchUsersByRoleAsync(Role.User, 10, 1, cts.Token))
             .Should().ThrowAsync<OperationCanceledException>();
 
         await FluentActions.Invoking(() => _userService.EditUserAsync(Guid.NewGuid(), new UserEditDto { Id = Guid.NewGuid() }, cts.Token))

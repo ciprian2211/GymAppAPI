@@ -58,19 +58,25 @@ public static class ExerciseEndpoints
         return result is null ? Results.NotFound() : Results.Ok(result);
     }
 
-    private static async Task<IResult> GetAllExercisesByCategoryAsync(ExerciseType exerciseType,
-        IExerciseService exerciseService, CancellationToken ct = default)
+    private static async Task<IResult> GetAllExercisesByCategoryAsync(ExerciseType exerciseType,int? pageSize,
+        int? pageNumber, IExerciseService exerciseService, CancellationToken ct = default)
     {
+        int size = pageSize.GetValueOrDefault(10);
+        int number = pageNumber.GetValueOrDefault(1);
+        
         var result = await exerciseService
-            .SearchExercisesByCategoryAsync(exerciseType, ct);
+            .SearchExercisesByCategoryAsync(exerciseType,size,number, ct);
         return Results.Ok(result);
     }
 
-    private static async Task<IResult> GetAllExercisesByTargetedMuscleAsync(TargetedMuscle targetedMuscle,
-        IExerciseService exerciseService, CancellationToken ct = default)
+    private static async Task<IResult> GetAllExercisesByTargetedMuscleAsync(TargetedMuscle targetedMuscle,int? pageSize,
+        int? pageNumber, IExerciseService exerciseService, CancellationToken ct = default)
     {
+        int size = pageSize.GetValueOrDefault(10);
+        int number = pageNumber.GetValueOrDefault(1);
+        
         var result = await exerciseService
-            .SearchExercisesByTargetedMuscleAsync(targetedMuscle, ct);
+            .SearchExercisesByTargetedMuscleAsync(targetedMuscle,size,number, ct);
         
         return Results.Ok(result);
     }

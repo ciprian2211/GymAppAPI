@@ -14,9 +14,10 @@ public interface IExerciseService
     Task<List<ExerciseDto>> AllExercisesAsync(int pageSize,int pageNumber,
         CancellationToken ct = default);
 
-    Task<List<ExerciseDto>> SearchExercisesByCategoryAsync(ExerciseType category, CancellationToken ct = default);
+    Task<List<ExerciseDto>> SearchExercisesByCategoryAsync(ExerciseType category, int pageSize = 10, int pageNumber = 1,
+        CancellationToken ct = default);
 
-    Task<List<ExerciseDto>> SearchExercisesByTargetedMuscleAsync(TargetedMuscle targetedMuscle,
+    Task<List<ExerciseDto>> SearchExercisesByTargetedMuscleAsync(TargetedMuscle targetedMuscle, int pageSize = 10, int pageNumber = 1,
         CancellationToken ct = default);
 
     Task<ExerciseDto?> EditExerciseAsync(Guid id, ExerciseAddDto dto,

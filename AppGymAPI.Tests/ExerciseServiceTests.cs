@@ -510,6 +510,38 @@ public class ExerciseServiceTests : IDisposable
         result.Should().BeEmpty();
     }
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public async Task SearchExercisesByCategoryAsync_WhenPageSizeIsZeroOrNegative_ReturnsEmptyList(int invalidPageSize)
+    {
+        var ex = CreateTestExercise(category: ExerciseType.Weightlifting);
+        await _dbContext.Exercises.AddAsync(ex);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        var result = await _exerciseService.SearchExercisesByCategoryAsync(ExerciseType.Weightlifting, invalidPageSize, 1);
+
+        result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task SearchExercisesByCategoryAsync_WithPagination_ReturnsCorrectPagedSlice()
+    {
+        var ex1 = CreateTestExercise(name: "Bench", category: ExerciseType.Weightlifting);
+        var ex2 = CreateTestExercise(name: "Squat", category: ExerciseType.Weightlifting);
+        var ex3 = CreateTestExercise(name: "Deadlift", category: ExerciseType.Weightlifting);
+        await _dbContext.Exercises.AddRangeAsync(ex1, ex2, ex3);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        var page1 = await _exerciseService.SearchExercisesByCategoryAsync(ExerciseType.Weightlifting, pageSize: 2, pageNumber: 1);
+        var page2 = await _exerciseService.SearchExercisesByCategoryAsync(ExerciseType.Weightlifting, pageSize: 2, pageNumber: 2);
+
+        page1.Should().HaveCount(2);
+        page2.Should().HaveCount(1);
+    }
+
     #endregion
 
     #region SearchExercisesByTargetedMuscleAsync Tests
@@ -550,6 +582,38 @@ public class ExerciseServiceTests : IDisposable
 
         // Assert
         result.Should().BeEmpty();
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public async Task SearchExercisesByTargetedMuscleAsync_WhenPageSizeIsZeroOrNegative_ReturnsEmptyList(int invalidPageSize)
+    {
+        var ex = CreateTestExercise(targetedMuscle: TargetedMuscle.Chest);
+        await _dbContext.Exercises.AddAsync(ex);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        var result = await _exerciseService.SearchExercisesByTargetedMuscleAsync(TargetedMuscle.Chest, invalidPageSize, 1);
+
+        result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task SearchExercisesByTargetedMuscleAsync_WithPagination_ReturnsCorrectPagedSlice()
+    {
+        var ex1 = CreateTestExercise(name: "Push Up", targetedMuscle: TargetedMuscle.Chest);
+        var ex2 = CreateTestExercise(name: "Incline Press", targetedMuscle: TargetedMuscle.Chest);
+        var ex3 = CreateTestExercise(name: "Dumbbell Fly", targetedMuscle: TargetedMuscle.Chest);
+        await _dbContext.Exercises.AddRangeAsync(ex1, ex2, ex3);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        var page1 = await _exerciseService.SearchExercisesByTargetedMuscleAsync(TargetedMuscle.Chest, pageSize: 2, pageNumber: 1);
+        var page2 = await _exerciseService.SearchExercisesByTargetedMuscleAsync(TargetedMuscle.Chest, pageSize: 2, pageNumber: 2);
+
+        page1.Should().HaveCount(2);
+        page2.Should().HaveCount(1);
     }
 
     #endregion
@@ -845,10 +909,10 @@ public class ExerciseServiceTests : IDisposable
         await FluentActions.Invoking(() => _exerciseService.AllExercisesAsync(10, 1, cts.Token))
             .Should().ThrowAsync<OperationCanceledException>();
 
-        await FluentActions.Invoking(() => _exerciseService.SearchExercisesByCategoryAsync(ExerciseType.Weightlifting, cts.Token))
+        await FluentActions.Invoking(() => _exerciseService.SearchExercisesByCategoryAsync(ExerciseType.Weightlifting, 10, 1, cts.Token))
             .Should().ThrowAsync<OperationCanceledException>();
 
-        await FluentActions.Invoking(() => _exerciseService.SearchExercisesByTargetedMuscleAsync(TargetedMuscle.Chest, cts.Token))
+        await FluentActions.Invoking(() => _exerciseService.SearchExercisesByTargetedMuscleAsync(TargetedMuscle.Chest, 10, 1, cts.Token))
             .Should().ThrowAsync<OperationCanceledException>();
 
         await FluentActions.Invoking(() => _exerciseService.EditExerciseAsync(Guid.NewGuid(), dummyDto, cts.Token))

@@ -26,17 +26,23 @@ public static class UserEndpoints
         return result is null ? Results.NotFound() : Results.Ok(result);
     }
 
-    private static async Task<IResult> GetUsersByNameAsync(IUserService userService, string name,
-        CancellationToken ct = default)
+    private static async Task<IResult> GetUsersByNameAsync(IUserService userService, string name,int? pageSize,
+        int? pageNumber, CancellationToken ct = default)
     {
-        var result = await userService.SearchUsersByNameAsync(name, ct);
+        int size = pageSize.GetValueOrDefault(10);
+        int number = pageNumber.GetValueOrDefault(1);
+        
+        var result = await userService.SearchUsersByNameAsync(name,size,number,ct);
         return Results.Ok(result);
     }
 
-    private static async Task<IResult> GetUsersByRoleAsync(IUserService userService, Role role,
-        CancellationToken ct = default)
+    private static async Task<IResult> GetUsersByRoleAsync(IUserService userService, Role role, int? pageSize,
+        int? pageNumber, CancellationToken ct = default)
     {
-        var result = await userService.SearchUsersByRoleAsync(role, ct);
+        int size = pageSize.GetValueOrDefault(10);
+        int number = pageNumber.GetValueOrDefault(1);
+        
+        var result = await userService.SearchUsersByRoleAsync(role,size,number,ct);
         return Results.Ok(result);
     }
 

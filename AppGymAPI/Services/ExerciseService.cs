@@ -64,6 +64,8 @@ public class ExerciseService : IExerciseService
         
         if (result is null) return false;
 
+
+        
         _dbContext.Exercises.Remove(result);
 
         try
@@ -132,12 +134,19 @@ public class ExerciseService : IExerciseService
         return result;
     }
 
-    public async Task<List<ExerciseDto>> SearchExercisesByCategoryAsync(ExerciseType category,
+    public async Task<List<ExerciseDto>> SearchExercisesByCategoryAsync(ExerciseType category, int pageSize = 10, int pageNumber = 1,
         CancellationToken ct = default)
     {
+        if (pageSize <= 0) return new List<ExerciseDto>();
+
+        var safePageNumber = Math.Max(1, pageNumber);
+        
         var result = await _dbContext.Exercises
             .AsNoTracking()
             .Where(e => e.Category == category)
+            .OrderBy(e => e.Id)
+            .Skip((safePageNumber - 1) * pageSize)
+            .Take(pageSize)
             .Select(e => new ExerciseDto
             {
                 Id = e.Id,
@@ -150,14 +159,21 @@ public class ExerciseService : IExerciseService
             .ToListAsync(ct);
         
         return result;
-    }//refactor mai tz sa specific si nr exercitii
+    }
 
-    public async Task<List<ExerciseDto>> SearchExercisesByTargetedMuscleAsync(TargetedMuscle targetedMuscle,
-        CancellationToken ct = default)
+    public async Task<List<ExerciseDto>> SearchExercisesByTargetedMuscleAsync(TargetedMuscle targetedMuscle, int pageSize = 10,
+        int pageNumber = 1, CancellationToken ct = default)
     {
+        if (pageSize <= 0) return new List<ExerciseDto>();
+
+        var safePageNumber = Math.Max(1, pageNumber);
+        
         var result = await _dbContext.Exercises
             .AsNoTracking()
             .Where(e => e.TargetedMuscle == targetedMuscle)
+            .OrderBy(e => e.Id)
+            .Skip((safePageNumber - 1) * pageSize)
+            .Take(pageSize)
             .Select(e => new ExerciseDto
             {
                 Id = e.Id,
@@ -170,7 +186,7 @@ public class ExerciseService : IExerciseService
             .ToListAsync(ct);
 
         return result;
-    }//si aici tot
+    }
 
     public async Task<ExerciseDto?> EditExerciseAsync(Guid id, ExerciseAddDto dto, CancellationToken ct = default)
     {
