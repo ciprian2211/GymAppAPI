@@ -290,12 +290,12 @@ public class ExerciseServiceTests : IDisposable
         await _dbContext.SaveChangesAsync();
         _dbContext.ChangeTracker.Clear();
 
-        _photoServiceMock.Setup(p => p.DeletePhotoAsync("appgymapi/curl_exercise")).ReturnsAsync(true);
+        _photoServiceMock.Setup(p => p.DeletePhotoByUrlAsync("https://cloudinary.com/appgymapi/curl_exercise.gif")).ReturnsAsync(true);
 
         var result = await _exerciseService.DeleteExerciseAsync(exercise.Id);
 
         result.Should().BeTrue();
-        _photoServiceMock.Verify(p => p.DeletePhotoAsync("appgymapi/curl_exercise"), Times.Once);
+        _photoServiceMock.Verify(p => p.DeletePhotoByUrlAsync("https://cloudinary.com/appgymapi/curl_exercise.gif"), Times.Once);
         var inDb = await _dbContext.Exercises.FirstOrDefaultAsync(e => e.Id == exercise.Id);
         inDb.Should().BeNull();
     }
@@ -310,7 +310,7 @@ public class ExerciseServiceTests : IDisposable
         await _dbContext.SaveChangesAsync();
         _dbContext.ChangeTracker.Clear();
 
-        _photoServiceMock.Setup(p => p.DeletePhotoAsync("appgymapi/curl_exercise")).ThrowsAsync(new Exception("Network error"));
+        _photoServiceMock.Setup(p => p.DeletePhotoByUrlAsync("https://cloudinary.com/appgymapi/curl_exercise.gif")).ThrowsAsync(new Exception("Network error"));
 
         var result = await _exerciseService.DeleteExerciseAsync(exercise.Id);
 
@@ -325,6 +325,21 @@ public class ExerciseServiceTests : IDisposable
             Times.Once);
         var inDb = await _dbContext.Exercises.FirstOrDefaultAsync(e => e.Id == exercise.Id);
         inDb.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task DeleteExerciseAsync_WhenDbUpdateExceptionOccurs_ReturnsFalse()
+    {
+        var exercise = CreateTestExercise(name: "Squat");
+        await _dbContext.Exercises.AddAsync(exercise);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        _concurrencyInterceptor.ThrowDbUpdateException = true;
+
+        var result = await _exerciseService.DeleteExerciseAsync(exercise.Id);
+
+        result.Should().BeFalse();
     }
 
     #endregion
@@ -370,6 +385,22 @@ public class ExerciseServiceTests : IDisposable
     #endregion
 
     #region AllExercisesAsync Tests
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public async Task AllExercisesAsync_WhenPageNumberIsZeroOrNegative_DefaultsToPageOne(int invalidPageNumber)
+    {
+        var exercise = CreateTestExercise(name: "Bench Press");
+        await _dbContext.Exercises.AddAsync(exercise);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        var result = await _exerciseService.AllExercisesAsync(pageSize: 10, pageNumber: invalidPageNumber);
+
+        result.Should().HaveCount(1);
+        result[0].Name.Should().Be("Bench Press");
+    }
 
     [Fact]
     public async Task AllExercisesAsync_WhenPageSizeIsZero_ReturnsEmptyList()
@@ -647,7 +678,7 @@ public class ExerciseServiceTests : IDisposable
         };
 
         const string newUrl = "https://cloudinary.com/appgymapi/new_exercise_photo.gif";
-        _photoServiceMock.Setup(p => p.DeletePhotoAsync("appgymapi/old_exercise_photo")).ReturnsAsync(true);
+        _photoServiceMock.Setup(p => p.DeletePhotoByUrlAsync("https://cloudinary.com/appgymapi/old_exercise_photo.gif")).ReturnsAsync(true);
         _photoServiceMock.Setup(p => p.AddGifAsync(file)).ReturnsAsync(newUrl);
 
         // Act
@@ -657,7 +688,7 @@ public class ExerciseServiceTests : IDisposable
         result.Should().NotBeNull();
         result!.Id.Should().Be(exercise.Id);
         result.GifUrl.Should().Be(newUrl);
-        _photoServiceMock.Verify(p => p.DeletePhotoAsync("appgymapi/old_exercise_photo"), Times.Once);
+        _photoServiceMock.Verify(p => p.DeletePhotoByUrlAsync("https://cloudinary.com/appgymapi/old_exercise_photo.gif"), Times.Once);
         _photoServiceMock.Verify(p => p.AddGifAsync(file), Times.Once);
 
         _dbContext.ChangeTracker.Clear();
@@ -686,7 +717,7 @@ public class ExerciseServiceTests : IDisposable
 
         const string newUrl = "https://cloudinary.com/appgymapi/new_image.gif";
         _photoServiceMock
-            .Setup(p => p.DeletePhotoAsync(It.IsAny<string>()))
+            .Setup(p => p.DeletePhotoByUrlAsync(It.IsAny<string>()))
             .ThrowsAsync(new InvalidOperationException("Deletion failed"));
 
         _photoServiceMock
@@ -830,12 +861,18 @@ public class ExerciseServiceTests : IDisposable
     private sealed class ConcurrencyExceptionInterceptor : SaveChangesInterceptor
     {
         public bool ThrowOnSaving { get; set; }
+        public bool ThrowDbUpdateException { get; set; }
 
         public override ValueTask<InterceptionResult<int>> SavingChangesAsync(
             DbContextEventData eventData,
             InterceptionResult<int> result,
             CancellationToken cancellationToken = default)
         {
+            if (ThrowDbUpdateException)
+            {
+                throw new DbUpdateException("Simulated foreign key constraint violation.");
+            }
+
             if (ThrowOnSaving)
             {
                 throw new DbUpdateConcurrencyException("Simulated concurrency conflict during SaveChangesAsync.");
@@ -848,6 +885,11 @@ public class ExerciseServiceTests : IDisposable
             DbContextEventData eventData,
             InterceptionResult<int> result)
         {
+            if (ThrowDbUpdateException)
+            {
+                throw new DbUpdateException("Simulated foreign key constraint violation.");
+            }
+
             if (ThrowOnSaving)
             {
                 throw new DbUpdateConcurrencyException("Simulated concurrency conflict during SaveChanges.");

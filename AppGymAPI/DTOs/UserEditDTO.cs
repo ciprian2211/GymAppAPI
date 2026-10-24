@@ -9,11 +9,11 @@ public class UserEditDto
     public IFormFile? ProfileImage { get; set; }
     
     [Required]
-    [StringLength(maximumLength:60,MinimumLength = 8,ErrorMessage = "Name length should not be greater than {1} or less than {2}")]
+    [StringLength(maximumLength:60,MinimumLength = 2,ErrorMessage = "Name length should not be greater than {1} or less than {2}")]
     public string Name { get; set; } = string.Empty;
     
     [Required]
-    [StringLength(60,ErrorMessage = "Name length should not be greater than 60")]
+    [StringLength(60,MinimumLength = 2,ErrorMessage = "Surname length should not be greater than {1} or less than {2}")]
     public string Surname { get; set; } = string.Empty;
 
     public string Description { get; set; } = string.Empty;

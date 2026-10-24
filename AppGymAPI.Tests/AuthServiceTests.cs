@@ -143,7 +143,7 @@ public class AuthServiceTests
 
         var result = await _authService.RegisterUserAsync(registerDto);
 
-        Assert.True(result);
+        result.Succeeded.Should().BeTrue();
         capturedUser.Should().NotBeNull();
         capturedUser!.ImageUrl.Should().Be("https://res.cloudinary.com/n7iduzxq/image/upload/v1792748390/user-profile.png");
     }
@@ -175,7 +175,7 @@ public class AuthServiceTests
 
         var result = await _authService.RegisterUserAsync(registerDto);
 
-        Assert.True(result);
+        result.Succeeded.Should().BeTrue();
         capturedUser.Should().NotBeNull();
         capturedUser!.ImageUrl.Should().Be(uploadedUrl);
         _photoServiceMock.Verify(p => p.AddPhotoAsync(file), Times.Once);
@@ -207,7 +207,7 @@ public class AuthServiceTests
 
         var result = await _authService.RegisterUserAsync(registerDto);
 
-        Assert.True(result);
+        result.Succeeded.Should().BeTrue();
         capturedUser.Should().NotBeNull();
         capturedUser!.ImageUrl.Should().Be("https://res.cloudinary.com/n7iduzxq/image/upload/v1792748390/user-profile.png");
     }
@@ -230,7 +230,27 @@ public class AuthServiceTests
 
         var result = await _authService.RegisterUserAsync(registerDto);
 
-        Assert.False(result);
+        result.Succeeded.Should().BeFalse();
+        result.Errors.Should().Contain("Email already taken!");
+    }
+
+    [Fact]
+    public async Task RegisterUserAsync_WhenCancelled_ThrowsOperationCanceledException()
+    {
+        var registerDto = new RegisterUserDto
+        {
+            Name = "Valid name",
+            Surname = "Valid surname",
+            Email = "test@gmail.com",
+            Password = "Password123!",
+            ConfirmPassword = "Password123!"
+        };
+
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        await FluentActions.Invoking(() => _authService.RegisterUserAsync(registerDto, cts.Token))
+            .Should().ThrowAsync<OperationCanceledException>();
     }
 
     [Fact]

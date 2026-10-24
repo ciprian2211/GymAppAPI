@@ -68,10 +68,7 @@ public class ExerciseService : IExerciseService
         {
             try
             {
-                var uri = new Uri(result.GifUrl);
-                var fileName = System.IO.Path.GetFileNameWithoutExtension(uri.LocalPath);
-                var publicId = $"appgymapi/{fileName}";
-                await _photoService.DeletePhotoAsync(publicId);
+                await _photoService.DeletePhotoByUrlAsync(result.GifUrl);
             }
             catch (Exception ex)
             {
@@ -80,9 +77,17 @@ public class ExerciseService : IExerciseService
         }
         
         _dbContext.Exercises.Remove(result);
-        await _dbContext.SaveChangesAsync(ct);
 
-        return true;
+        try
+        {
+            await _dbContext.SaveChangesAsync(ct);
+            return true;
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogWarning(ex, "Failed to delete exercise {ExerciseId} due to database update constraint or conflict", id);
+            return false;
+        }
     }
 
     public async Task<ExerciseDto?> SearchExerciseByNameAsync(string name, CancellationToken ct = default)
@@ -104,14 +109,15 @@ public class ExerciseService : IExerciseService
         };
     } 
 
-    public async Task<List<ExerciseDto>> AllExercisesAsync(int pageSize,int pageNumber,
+    public async Task<List<ExerciseDto>> AllExercisesAsync(int pageSize, int pageNumber,
         CancellationToken ct = default)
     {
         if (pageSize <= 0) return new List<ExerciseDto>();
-        
+        var safePageNumber = Math.Max(1, pageNumber);
+
         var result = await _dbContext.Exercises
             .AsNoTracking()
-            .Skip((pageNumber-1)*pageSize)
+            .Skip((safePageNumber - 1) * pageSize)
             .Take(pageSize)
             .Select(e => new ExerciseDto
             {
@@ -186,16 +192,11 @@ public class ExerciseService : IExerciseService
             {
                 try
                 {
-
-                    var uri = new Uri(exercise.GifUrl);
-                    var fileName = System.IO.Path.GetFileNameWithoutExtension(uri.LocalPath);
-                    var publicId = $"appgymapi/{fileName}";
-                    await _photoService.DeletePhotoAsync(publicId);
+                    await _photoService.DeletePhotoByUrlAsync(exercise.GifUrl);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to delete old image {ImageUrl} for exercise {ExerciseId}", exercise.GifUrl,
-                        id);
+                    _logger.LogWarning(ex, "Failed to delete old image {ImageUrl} for exercise {ExerciseId}", exercise.GifUrl, id);
                 }
             }
 

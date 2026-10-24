@@ -105,4 +105,20 @@ public class PhotoServiceTests
 
         result.Should().BeNull();
     }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task DeletePhotoByUrlAsync_WhenUrlIsEmpty_ReturnsFalse(string emptyUrl)
+    {
+        var result = await _photoService.DeletePhotoByUrlAsync(emptyUrl);
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task DeletePhotoByUrlAsync_WhenUrlIsInvalidUri_ReturnsFalse()
+    {
+        var result = await _photoService.DeletePhotoByUrlAsync("not-a-valid-uri");
+        result.Should().BeFalse();
+    }
 }

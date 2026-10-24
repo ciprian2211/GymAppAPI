@@ -13,12 +13,12 @@ public static class AuthEndpoints
         group.MapPost("refresh-token", RefreshToken);
     }
 
-    private static async Task<IResult> RegisterUser(IAuthService authService,RegisterUserDto request)
+    private static async Task<IResult> RegisterUser(IAuthService authService, RegisterUserDto request, CancellationToken cancellationToken)
     {
-        var result = await authService.RegisterUserAsync(request);
-        if (!result)
+        var result = await authService.RegisterUserAsync(request, cancellationToken);
+        if (!result.Succeeded)
         {
-            return Results.BadRequest(new { Error = "Something went wrong. Try again." });
+            return Results.BadRequest(new { Errors = result.Errors });
         }
 
         return Results.Created();

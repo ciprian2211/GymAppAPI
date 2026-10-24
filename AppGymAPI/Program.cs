@@ -17,6 +17,12 @@ builder.Services.AddIdentity<User, IdentityRole<Guid>>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
+var jwtSecret = builder.Configuration["JwtSettings:SecretKey"];
+if (!builder.Environment.IsDevelopment() && (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.Contains("REPLACE_") || jwtSecret.Contains("YourSuperSecretKey") || Encoding.UTF8.GetByteCount(jwtSecret) < 32))
+{
+    throw new InvalidOperationException("JWT SecretKey is missing or insecure in production environment.");
+}
+
 builder.Services.AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -34,7 +40,7 @@ builder.Services.AddAuthentication(options =>
             ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
             ValidAudience = builder.Configuration["JwtSettings:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKey"]!)),
+                Encoding.UTF8.GetBytes(jwtSecret!)),
             RoleClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
         };
     });

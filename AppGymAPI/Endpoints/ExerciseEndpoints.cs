@@ -10,16 +10,27 @@ public static class ExerciseEndpoints
     public static void Map(WebApplication app)
     {
         var group = app.MapGroup("/api/v1/exercises").RequireAuthorization();
+        group.MapGet("", GetAllExercisesAsync);
         group.MapGet("{id:guid}", GetExerciseByIdAsync);
         group.MapGet("by-name/{name}", GetExerciseByNameAsync);
         group.MapGet("by-category/{exerciseType}", GetAllExercisesByCategoryAsync);
         group.MapGet("by-targeted-muscle/{targetedMuscle}", GetAllExercisesByTargetedMuscleAsync);
         group.MapPost("", PostExerciseAsync)
             .RequireRoles(Role.Admin);
-        group.MapPut("edit/{id:guid}", PutExerciseAsync)
+        group.MapPut("{id:guid}", PutExerciseAsync)
             .RequireRoles(Role.Admin);
-        group.MapDelete("delete/{id:guid}", DeleteExerciseAsync)
+        group.MapDelete("{id:guid}", DeleteExerciseAsync)
             .RequireRoles(Role.Admin);
+    }
+
+    private static async Task<IResult> GetAllExercisesAsync(
+        IExerciseService exerciseService,
+        int pageSize = 10,
+        int pageNumber = 1,
+        CancellationToken ct = default)
+    {
+        var result = await exerciseService.AllExercisesAsync(pageSize, pageNumber, ct);
+        return Results.Ok(result);
     }
 
     private static async Task<IResult> PostExerciseAsync(ExerciseAddDto request,
