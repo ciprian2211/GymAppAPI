@@ -18,6 +18,7 @@ builder.Services.AddIdentity<User, IdentityRole<Guid>>()
     .AddDefaultTokenProviders();
 
 builder.Services.AddCors();
+builder.Services.AddValidation();
 
 var jwtSecret = builder.Configuration["JwtSettings:SecretKey"];
 if (!builder.Environment.IsDevelopment() && (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.Contains("REPLACE_") || jwtSecret.Contains("YourSuperSecretKey") || Encoding.UTF8.GetByteCount(jwtSecret) < 32))
