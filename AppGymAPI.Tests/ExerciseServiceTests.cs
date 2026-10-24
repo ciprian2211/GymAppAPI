@@ -330,7 +330,7 @@ public class ExerciseServiceTests : IDisposable
     [Fact]
     public async Task DeleteExerciseAsync_WhenDbUpdateExceptionOccurs_ReturnsFalse()
     {
-        var exercise = CreateTestExercise(name: "Squat");
+        var exercise = CreateTestExercise(name: "Squat", gifUrl: "https://cloudinary.com/appgymapi/squat.gif");
         await _dbContext.Exercises.AddAsync(exercise);
         await _dbContext.SaveChangesAsync();
         _dbContext.ChangeTracker.Clear();
@@ -340,6 +340,7 @@ public class ExerciseServiceTests : IDisposable
         var result = await _exerciseService.DeleteExerciseAsync(exercise.Id);
 
         result.Should().BeFalse();
+        _photoServiceMock.Verify(p => p.DeletePhotoByUrlAsync(It.IsAny<string>()), Times.Never);
     }
 
     #endregion

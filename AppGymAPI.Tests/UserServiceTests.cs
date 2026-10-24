@@ -678,8 +678,8 @@ public class UserServiceTests : IDisposable
     [Fact]
     public async Task Test_DeleteUserById_WhenConcurrencyConflictOccurs_ReturnsFalse()
     {
-        // Arrange: Seed user, then force DbUpdateConcurrencyException on SaveChangesAsync
-        var user = CreateTestUser(name: "DeleteConflictUser");
+        // Arrange: Seed user with image, then force DbUpdateConcurrencyException on SaveChangesAsync
+        var user = CreateTestUser(name: "DeleteConflictUser", imageUrl: "https://res.cloudinary.com/demo/image/upload/v1234/appgymapi/user_avatar.jpg");
         await _dbContext.Users.AddAsync(user);
         await _dbContext.SaveChangesAsync();
         _dbContext.ChangeTracker.Clear();
@@ -691,6 +691,7 @@ public class UserServiceTests : IDisposable
 
         // Assert
         result.Should().BeFalse();
+        _photoServiceMock.Verify(p => p.DeletePhotoByUrlAsync(It.IsAny<string>()), Times.Never);
     }
 
     #endregion

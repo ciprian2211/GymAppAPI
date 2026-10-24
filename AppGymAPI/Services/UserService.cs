@@ -120,30 +120,28 @@ public class UserService : IUserService
             
         if (user is null) return false;
 
-        if (!string.IsNullOrEmpty(user.ImageUrl) && !user.ImageUrl.Contains("user-profile.png"))
-        {
-            try
-            {
-                await _photoService.DeletePhotoByUrlAsync(user.ImageUrl);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to delete old image {ImageUrl} for user {UserId}", user.ImageUrl, id);
-            }
-        }
-
         _appDbContext.Users.Remove(user);
         
         try
         {
             await _appDbContext.SaveChangesAsync(cancellationToken);
+            if (!string.IsNullOrEmpty(user.ImageUrl) && !user.ImageUrl.Contains("user-profile.png"))
+            {
+                try
+                {
+                    await _photoService.DeletePhotoByUrlAsync(user.ImageUrl);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to delete old image {ImageUrl} for user {UserId}", user.ImageUrl, id);
+                }
+            }
+            return true;
         }
         catch (DbUpdateConcurrencyException ex)
         {
             _logger.LogError(ex, "Concurrency error while deleting user {UserId}", id);
             return false; 
         }
-        
-        return true;
     }
 }

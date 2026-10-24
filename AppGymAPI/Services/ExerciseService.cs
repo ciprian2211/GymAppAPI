@@ -64,23 +64,22 @@ public class ExerciseService : IExerciseService
         
         if (result is null) return false;
 
-        if (!string.IsNullOrEmpty(result.GifUrl))
-        {
-            try
-            {
-                await _photoService.DeletePhotoByUrlAsync(result.GifUrl);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to delete old image {ImageUrl} for exercise {ExerciseId}", result.GifUrl, id);
-            }
-        }
-        
         _dbContext.Exercises.Remove(result);
 
         try
         {
             await _dbContext.SaveChangesAsync(ct);
+            if (!string.IsNullOrEmpty(result.GifUrl))
+            {
+                try
+                {
+                    await _photoService.DeletePhotoByUrlAsync(result.GifUrl);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to delete old image {ImageUrl} for exercise {ExerciseId}", result.GifUrl, id);
+                }
+            }
             return true;
         }
         catch (DbUpdateException ex)
