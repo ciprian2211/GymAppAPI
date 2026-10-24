@@ -1,6 +1,6 @@
 @AppGymAPI_HostAddress = http://localhost:5219
 
-GET {{AppGymAPI_HostAddress}}
+GET {{AppGymAPI_HostAddress}}/api/v1/users/by-name/VASILE
 Accept: application/json
 
 ###

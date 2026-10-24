@@ -7,9 +7,11 @@ public interface IUserService
 {
     public Task<UserDto?> SearchUserByIdAsync(Guid id, CancellationToken cancellationToken = default);
     
-    public Task<List<UserListDto>> SearchUsersByNameAsync(string name, CancellationToken cancellationToken = default);
+    public Task<List<UserListDto>> SearchUsersByNameAsync(string name, int pageSize = 10, int pageNumber = 1,
+        CancellationToken cancellationToken = default);
     
-    public Task<List<UserListDto>> SearchUsersByRoleAsync(Role role, CancellationToken cancellationToken = default);
+    public Task<List<UserListDto>> SearchUsersByRoleAsync(Role role, int pageSize = 10, int pageNumber = 1,
+        CancellationToken cancellationToken = default);
 
     public Task<UserEditDto?> EditUserAsync(Guid id,UserEditDto dto, CancellationToken cancellationToken = default);
 

@@ -330,7 +330,7 @@ public class ExerciseServiceTests : IDisposable
     [Fact]
     public async Task DeleteExerciseAsync_WhenDbUpdateExceptionOccurs_ReturnsFalse()
     {
-        var exercise = CreateTestExercise(name: "Squat");
+        var exercise = CreateTestExercise(name: "Squat", gifUrl: "https://cloudinary.com/appgymapi/squat.gif");
         await _dbContext.Exercises.AddAsync(exercise);
         await _dbContext.SaveChangesAsync();
         _dbContext.ChangeTracker.Clear();
@@ -340,6 +340,7 @@ public class ExerciseServiceTests : IDisposable
         var result = await _exerciseService.DeleteExerciseAsync(exercise.Id);
 
         result.Should().BeFalse();
+        _photoServiceMock.Verify(p => p.DeletePhotoByUrlAsync(It.IsAny<string>()), Times.Never);
     }
 
     #endregion
@@ -467,6 +468,26 @@ public class ExerciseServiceTests : IDisposable
         result.Should().BeEmpty();
     }
 
+    [Fact]
+    public async Task AllExercisesAsync_OrdersByIdDeterministically()
+    {
+        var guid1 = new Guid("11111111-1111-1111-1111-111111111111");
+        var guid2 = new Guid("22222222-2222-2222-2222-222222222222");
+        var guid3 = new Guid("33333333-3333-3333-3333-333333333333");
+
+        var ex2 = CreateTestExercise(id: guid2, name: "Second");
+        var ex3 = CreateTestExercise(id: guid3, name: "Third");
+        var ex1 = CreateTestExercise(id: guid1, name: "First");
+
+        await _dbContext.Exercises.AddRangeAsync(ex2, ex3, ex1);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        var result = await _exerciseService.AllExercisesAsync(pageSize: 10, pageNumber: 1);
+
+        result.Select(e => e.Id).Should().ContainInOrder(guid1, guid2, guid3);
+    }
+
     #endregion
 
     #region SearchExercisesByCategoryAsync Tests
@@ -509,6 +530,38 @@ public class ExerciseServiceTests : IDisposable
         result.Should().BeEmpty();
     }
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public async Task SearchExercisesByCategoryAsync_WhenPageSizeIsZeroOrNegative_ReturnsEmptyList(int invalidPageSize)
+    {
+        var ex = CreateTestExercise(category: ExerciseType.Weightlifting);
+        await _dbContext.Exercises.AddAsync(ex);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        var result = await _exerciseService.SearchExercisesByCategoryAsync(ExerciseType.Weightlifting, invalidPageSize, 1);
+
+        result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task SearchExercisesByCategoryAsync_WithPagination_ReturnsCorrectPagedSlice()
+    {
+        var ex1 = CreateTestExercise(name: "Bench", category: ExerciseType.Weightlifting);
+        var ex2 = CreateTestExercise(name: "Squat", category: ExerciseType.Weightlifting);
+        var ex3 = CreateTestExercise(name: "Deadlift", category: ExerciseType.Weightlifting);
+        await _dbContext.Exercises.AddRangeAsync(ex1, ex2, ex3);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        var page1 = await _exerciseService.SearchExercisesByCategoryAsync(ExerciseType.Weightlifting, pageSize: 2, pageNumber: 1);
+        var page2 = await _exerciseService.SearchExercisesByCategoryAsync(ExerciseType.Weightlifting, pageSize: 2, pageNumber: 2);
+
+        page1.Should().HaveCount(2);
+        page2.Should().HaveCount(1);
+    }
+
     #endregion
 
     #region SearchExercisesByTargetedMuscleAsync Tests
@@ -549,6 +602,38 @@ public class ExerciseServiceTests : IDisposable
 
         // Assert
         result.Should().BeEmpty();
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public async Task SearchExercisesByTargetedMuscleAsync_WhenPageSizeIsZeroOrNegative_ReturnsEmptyList(int invalidPageSize)
+    {
+        var ex = CreateTestExercise(targetedMuscle: TargetedMuscle.Chest);
+        await _dbContext.Exercises.AddAsync(ex);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        var result = await _exerciseService.SearchExercisesByTargetedMuscleAsync(TargetedMuscle.Chest, invalidPageSize, 1);
+
+        result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task SearchExercisesByTargetedMuscleAsync_WithPagination_ReturnsCorrectPagedSlice()
+    {
+        var ex1 = CreateTestExercise(name: "Push Up", targetedMuscle: TargetedMuscle.Chest);
+        var ex2 = CreateTestExercise(name: "Incline Press", targetedMuscle: TargetedMuscle.Chest);
+        var ex3 = CreateTestExercise(name: "Dumbbell Fly", targetedMuscle: TargetedMuscle.Chest);
+        await _dbContext.Exercises.AddRangeAsync(ex1, ex2, ex3);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        var page1 = await _exerciseService.SearchExercisesByTargetedMuscleAsync(TargetedMuscle.Chest, pageSize: 2, pageNumber: 1);
+        var page2 = await _exerciseService.SearchExercisesByTargetedMuscleAsync(TargetedMuscle.Chest, pageSize: 2, pageNumber: 2);
+
+        page1.Should().HaveCount(2);
+        page2.Should().HaveCount(1);
     }
 
     #endregion
@@ -844,10 +929,10 @@ public class ExerciseServiceTests : IDisposable
         await FluentActions.Invoking(() => _exerciseService.AllExercisesAsync(10, 1, cts.Token))
             .Should().ThrowAsync<OperationCanceledException>();
 
-        await FluentActions.Invoking(() => _exerciseService.SearchExercisesByCategoryAsync(ExerciseType.Weightlifting, cts.Token))
+        await FluentActions.Invoking(() => _exerciseService.SearchExercisesByCategoryAsync(ExerciseType.Weightlifting, 10, 1, cts.Token))
             .Should().ThrowAsync<OperationCanceledException>();
 
-        await FluentActions.Invoking(() => _exerciseService.SearchExercisesByTargetedMuscleAsync(TargetedMuscle.Chest, cts.Token))
+        await FluentActions.Invoking(() => _exerciseService.SearchExercisesByTargetedMuscleAsync(TargetedMuscle.Chest, 10, 1, cts.Token))
             .Should().ThrowAsync<OperationCanceledException>();
 
         await FluentActions.Invoking(() => _exerciseService.EditExerciseAsync(Guid.NewGuid(), dummyDto, cts.Token))
