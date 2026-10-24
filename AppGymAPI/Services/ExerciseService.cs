@@ -118,6 +118,7 @@ public class ExerciseService : IExerciseService
 
         var result = await _dbContext.Exercises
             .AsNoTracking()
+            .OrderBy(e => e.Id)
             .Skip((safePageNumber - 1) * pageSize)
             .Take(pageSize)
             .Select(e => new ExerciseDto

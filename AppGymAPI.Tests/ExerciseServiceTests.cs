@@ -468,6 +468,26 @@ public class ExerciseServiceTests : IDisposable
         result.Should().BeEmpty();
     }
 
+    [Fact]
+    public async Task AllExercisesAsync_OrdersByIdDeterministically()
+    {
+        var guid1 = new Guid("11111111-1111-1111-1111-111111111111");
+        var guid2 = new Guid("22222222-2222-2222-2222-222222222222");
+        var guid3 = new Guid("33333333-3333-3333-3333-333333333333");
+
+        var ex2 = CreateTestExercise(id: guid2, name: "Second");
+        var ex3 = CreateTestExercise(id: guid3, name: "Third");
+        var ex1 = CreateTestExercise(id: guid1, name: "First");
+
+        await _dbContext.Exercises.AddRangeAsync(ex2, ex3, ex1);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
+
+        var result = await _exerciseService.AllExercisesAsync(pageSize: 10, pageNumber: 1);
+
+        result.Select(e => e.Id).Should().ContainInOrder(guid1, guid2, guid3);
+    }
+
     #endregion
 
     #region SearchExercisesByCategoryAsync Tests
