@@ -18,7 +18,8 @@ public class AuthService : IAuthService
     private readonly ILogger<AuthService> _logger;
     private readonly IPhotoService _photoService;
     
-    public AuthService(UserManager<User> userManager, IConfiguration configuration, ILogger<AuthService> logger, IPhotoService photoService)
+    public AuthService(UserManager<User> userManager, IConfiguration configuration, 
+        ILogger<AuthService> logger, IPhotoService photoService)
     {
         _userManager = userManager;
         _configuration = configuration;
@@ -63,7 +64,7 @@ public class AuthService : IAuthService
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        string? imageUrl = string.Empty;
+        string? imageUrl;
         if (dto.ProfileImage != null && dto.ProfileImage.Length > 0)
         {
             imageUrl = await _photoService.AddPhotoAsync(dto.ProfileImage);
